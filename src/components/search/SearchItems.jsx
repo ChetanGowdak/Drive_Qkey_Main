@@ -12,7 +12,6 @@ const SearchItems = () => {
 
   const params = useParams();
   const query = params.query;
-  console.log(query);
 
   useEffect(() => {
     const fetchData = async () => {

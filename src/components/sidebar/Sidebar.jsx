@@ -72,18 +72,13 @@ const Sidebar = () => {
 
       // 2️⃣ Create UNIQUE public_id for Cloudinary
       const publicId = `files/${uuidv4()}_${meta.originalName}.enc`;
-      console.log("📤 Step 2: Starting Cloudinary upload...", publicId);
 
       // 3️⃣ Upload to Cloudinary
       const { url } = await uploadToCloudinary(encryptedBlob, publicId);
-      console.log("✅ Step 3: Cloudinary upload complete, URL:", url);
 
       setProgress(100);
 
       // 4️⃣ Save metadata to Firestore
-      console.log("💾 Step 4: Saving to Firestore...");
-      console.log("👤 Current user:", auth.currentUser?.uid);
-
       if (!auth.currentUser) {
         throw new Error("Not authenticated - please log in again");
       }
@@ -110,18 +105,8 @@ const Sidebar = () => {
         },
         starred: false,
       };
-      console.log("📄 Doc data:", docData);
 
-      // Add timeout to detect hang
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Firestore save timed out after 15 seconds")), 15000)
-      );
-
-      const docRef = await Promise.race([
-        addDoc(collection(db, "myfiles"), docData),
-        timeoutPromise
-      ]);
-      console.log("✅ Step 5: Firestore save complete! Doc ID:", docRef.id);
+      await addDoc(collection(db, "myfiles"), docData);
 
       toast.success("Encrypted upload complete ✅");
 

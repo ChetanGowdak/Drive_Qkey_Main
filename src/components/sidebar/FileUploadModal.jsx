@@ -90,12 +90,29 @@ const ModalPopup = styled.div`
     cursor: pointer;
     color: #5f6368;
   }
+
+  body.dark-mode & {
+    background-color: #2d2d2d;
+    color: #e8eaed;
+
+    span {
+      color: #9aa0a6;
+    }
+  }
 `;
 
 const ModalHeading = styled.div`
   text-align: center;
   border-bottom: 1px solid lightgray;
   height: 40px;
+
+  body.dark-mode & {
+    border-bottom-color: #5f6368;
+    
+    h3 {
+      color: #e8eaed;
+    }
+  }
 `;
 
 const ModalBody = styled.div`
@@ -175,6 +192,22 @@ const ModalBody = styled.div`
       display: none;
     }
   }
+
+  body.dark-mode & {
+    .modal__file {
+      color: #e8eaed;
+      border-color: #8ab4f8;
+
+      label {
+        border-color: #9aa0a6;
+        color: #e8eaed;
+
+        svg {
+          color: #e8eaed;
+        }
+      }
+    }
+  }
 `;
 
 const UploadingPara = styled.div`
@@ -210,6 +243,14 @@ const ProgressBar = styled.div`
     width: ${(props) => props.progress}%;
     transition: width 0.4s ease-in-out;
   }
+
+  body.dark-mode & {
+    background-color: #404040;
+
+    &:after {
+      background-color: #8ab4f8;
+    }
+  }
 `;
 
 const ProgressText = styled.p`
@@ -217,6 +258,10 @@ const ProgressText = styled.p`
   font-size: 14px;
   font-weight: bold;
   color: #0066da;
+
+  body.dark-mode & {
+    color: #8ab4f8;
+  }
 `;
 
 export default FileUploadModal;

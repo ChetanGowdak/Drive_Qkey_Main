@@ -4,27 +4,12 @@
 import cloudinaryConfig from "../../cloudinaryConfig";
 
 /**
- * Upload an encrypted blob to Cloudinary
- * Uses unsigned upload (no API secret required on client)
- * 
- * SETUP REQUIRED:
- * 1. Go to Cloudinary Dashboard > Settings > Upload
- * 2. Create an upload preset with "Unsigned" signing mode  
- * 3. Add VITE_CLOUDINARY_UPLOAD_PRESET=your_preset_name to .env
- * 
  * @param {Blob} blob - The encrypted file blob
  * @param {string} publicId - Unique identifier for the file
  * @returns {Promise<{url: string, publicId: string}>}
  */
 export async function uploadToCloudinary(blob, publicId) {
     const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-
-    // Debug logging - remove after fixing
-    console.log("🔍 Cloudinary Debug:", {
-        cloudName: cloudinaryConfig.cloudName,
-        uploadPreset: uploadPreset,
-        allEnv: import.meta.env
-    });
 
     if (!uploadPreset) {
         throw new Error("Missing VITE_CLOUDINARY_UPLOAD_PRESET in .env. Create an unsigned upload preset in Cloudinary Dashboard first.");

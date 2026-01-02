@@ -69,26 +69,31 @@ const handleDeleteFromTrash = async (trashId) => {
     );
     if (!confirmed) return;
 
-    const tRef = doc(db, "trash", trashId);
-    const tSnap = await getDoc(tRef);
-    const data = tSnap.exists() ? tSnap.data() : null;
-
-    // 1) Delete Firestore doc from trash
-    await deleteDoc(tRef);
-
-    // 2) Delete from Cloudinary if we know the path (public_id)
-    if (data?.path) {
-      try {
-        await deleteFromCloudinary(data.path);
-      } catch (e) {
-        // If path missing or already gone, just log
-        console.warn("Cloudinary delete skipped:", e?.message || e);
-      }
-    }
-
+    await deleteFromTrashPermanently(trashId);
     toast.error("Permanently Deleted");
   } catch (error) {
     console.error("Error deleting from trash: ", error);
+  }
+};
+
+/**
+ * Delete from trash without confirmation (for bulk operations)
+ */
+const deleteFromTrashPermanently = async (trashId) => {
+  const tRef = doc(db, "trash", trashId);
+  const tSnap = await getDoc(tRef);
+  const data = tSnap.exists() ? tSnap.data() : null;
+
+  // 1) Delete Firestore doc from trash
+  await deleteDoc(tRef);
+
+  // 2) Delete from Cloudinary if we know the path (public_id)
+  if (data?.path) {
+    try {
+      await deleteFromCloudinary(data.path);
+    } catch (e) {
+      console.warn("Cloudinary delete skipped:", e?.message || e);
+    }
   }
 };
 
@@ -188,5 +193,6 @@ export {
   handleStarred,
   getTrashFiles,
   handleDeleteFromTrash,
+  deleteFromTrashPermanently,
   restoreFile, // ✅ export new restore
 };

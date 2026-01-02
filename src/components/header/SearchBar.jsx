@@ -1,12 +1,28 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { SearchIcons } from "../common/SvgIcons";
+import { useNavigate } from "react-router-dom";
 
 const SearchBar = () => {
+  const [query, setQuery] = useState("");
+  const navigate = useNavigate();
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && query.trim()) {
+      navigate(`/search/${encodeURIComponent(query.trim())}`);
+    }
+  };
+
   return (
     <InputWrapper>
-      <input type="text" placeholder="Search in Drive..." />
-      <span className="icon">
+      <input
+        type="text"
+        placeholder="Search in Drive..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={handleKeyDown}
+      />
+      <span className="icon" onClick={() => query.trim() && navigate(`/search/${encodeURIComponent(query.trim())}`)}>
         <SearchIcons />
       </span>
     </InputWrapper>
@@ -46,8 +62,12 @@ const InputWrapper = styled.div`
     top: 50%;
     right: 10px;
     transform: translateY(-50%);
-    pointer-events: none;
+    cursor: pointer;
     opacity: 0.6;
+
+    &:hover {
+      opacity: 1;
+    }
   }
 
   .icon svg {

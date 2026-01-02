@@ -6,26 +6,77 @@ import {
   getTrashFiles,
   restoreFile,
   handleDeleteFromTrash,
+  deleteFromTrashPermanently,
 } from "../common/firebaseApi";
 import FileIcons from "../common/FileIcons";
 import { changeBytes, convertDates } from "../common/common";
 import { DeleteIcon } from "../common/SvgIcons";
+import LoaderContainer from "../loaders/LoaderContainer";
+import { toast } from "react-toastify";
 
 const Trash = () => {
   const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [emptying, setEmptying] = useState(false);
 
   useEffect(() => {
     const user = auth.currentUser;
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
-    const unsub = getTrashFiles(user.uid, setFiles);
+    const unsub = getTrashFiles(user.uid, (data) => {
+      setFiles(data);
+      setLoading(false);
+    });
     return () => unsub && unsub();
   }, []);
+
+  // 🗑️ Empty all trash
+  const handleEmptyTrash = async () => {
+    if (files.length === 0) return;
+
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete all ${files.length} files? This cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    setEmptying(true);
+    try {
+      for (const file of files) {
+        await deleteFromTrashPermanently(file.id);
+      }
+      toast.success("Trash emptied successfully! 🗑️");
+    } catch (err) {
+      console.error("Error emptying trash:", err);
+      toast.error("Failed to empty trash");
+    } finally {
+      setEmptying(false);
+    }
+  };
 
   return (
     <TrashContainer>
       <PageHeader pageTitle={"Trash"} />
-      {files.length === 0 ? (
+
+      {/* 🗑️ Trash Header with Empty Trash button */}
+      {!loading && files.length > 0 && (
+        <TrashHeader>
+          <FileCount>{files.length} file{files.length > 1 ? 's' : ''} in trash</FileCount>
+          <EmptyTrashBtn
+            onClick={handleEmptyTrash}
+            disabled={emptying}
+          >
+            {emptying ? "Emptying..." : "🗑️ Empty Trash"}
+          </EmptyTrashBtn>
+        </TrashHeader>
+      )}
+
+      {loading ? (
+        <LoaderContainer />
+      ) : files.length === 0 ? (
         <EmptyState>
           <img src="/trash.svg" alt="Empty Trash" />
           <p>No files in Trash</p>
@@ -55,7 +106,7 @@ const Trash = () => {
                     Deleted:{" "}
                     {convertDates(
                       file.data.deletedAt?.seconds ||
-                        file.data.timestamp?.seconds
+                      file.data.timestamp?.seconds
                     )}
                   </span>
                 </Meta>
@@ -91,17 +142,76 @@ const TrashContainer = styled.div`
   }
 `;
 
+const TrashHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+
+  body.dark-mode & {
+    border-bottom-color: #374151;
+  }
+`;
+
+const FileCount = styled.span`
+  font-size: 14px;
+  color: #6b7280;
+
+  body.dark-mode & {
+    color: #9ca3af;
+  }
+`;
+
+const EmptyTrashBtn = styled.button`
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  &:hover:not(:disabled) {
+    background: #fee2e2;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  body.dark-mode & {
+    color: #f87171;
+    border-color: #7f1d1d;
+    background: #2b1818;
+  }
+  body.dark-mode &:hover:not(:disabled) {
+    background: #3f1f1f;
+  }
+`;
+
 const Grid = styled.div`
   width: 100%;
   display: grid;
   gap: 14px;
   padding: 10px 0;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
 
-  /* 🖥 Desktop 4 cols, Tablet 2, Mobile 1 */
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-
-  @media (max-width: 480px) {
-    gap: 10px;
+  @media (max-width: 1100px) {
+    grid-template-columns: repeat(3, minmax(200px, 1fr));
+  }
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+  @media (max-width: 420px) {
+    grid-template-columns: 1fr;
   }
 `;
 

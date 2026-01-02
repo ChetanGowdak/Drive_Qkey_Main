@@ -242,6 +242,12 @@ const SidebarOptions = styled.div`
   .tab-active {
     background: #cacaca;
   }
+
+  body.dark-mode & {
+    .tab-active {
+      background: #3a3b3f;
+    }
+  }
 `;
 
 const SidebarOption = styled.div`
@@ -264,6 +270,20 @@ const SidebarOption = styled.div`
 
     @media screen and (max-width: 768px) {
       display: none;
+    }
+  }
+
+  body.dark-mode & {
+    &:hover {
+      background: #3a3b3f;
+    }
+
+    svg.MuiSvgIcon-root {
+      color: #9aa0a6;
+    }
+
+    span {
+      color: #e5e7eb;
     }
   }
 `;

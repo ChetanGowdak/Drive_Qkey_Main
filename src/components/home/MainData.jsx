@@ -38,6 +38,9 @@ const MainData = ({ files, handleOptionsClick, optionsVisible, handleDelete }) =
   // 🔐 password modal state
   const [showPassword, setShowPassword] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [isDecrypting, setIsDecrypting] = useState(false);
+  const [decryptError, setDecryptError] = useState("");
+  const [modalMode, setModalMode] = useState("download"); // "download" | "share"
 
   // ✅ Close dropdowns on outside click
   useEffect(() => {
@@ -54,41 +57,91 @@ const MainData = ({ files, handleOptionsClick, optionsVisible, handleDelete }) =
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [handleOptionsClick]);
 
-  // 🔐 Decrypt AFTER password entered
-  const handleDecryptConfirm = async (password) => {
-    try {
-      setShowPassword(false);
-      if (!password || !selectedFile) return;
+  // 🔐 Open password modal for download
+  const openDownloadModal = (file) => {
+    setSelectedFile(file);
+    setModalMode("download");
+    setDecryptError("");
+    setShowPassword(true);
+  };
 
-      const fileURL = selectedFile.data?.fileURL;
-      if (!fileURL) {
-        alert("❌ Missing URL to encrypted file.");
-        return;
+  // 🔗 Open password modal for share link
+  const openShareLinkModal = (file) => {
+    setSelectedFile(file);
+    setModalMode("share");
+    setDecryptError("");
+    setShowPassword(true);
+  };
+
+  // 🔐 Handle password submission
+  const handlePasswordSubmit = async (password) => {
+    if (!password || !selectedFile) return;
+
+    setIsDecrypting(true);
+    setDecryptError("");
+
+    try {
+      if (modalMode === "download") {
+        // Download flow - decrypt locally
+        const fileURL = selectedFile.data?.fileURL;
+        if (!fileURL) {
+          throw new Error("Missing URL to encrypted file.");
+        }
+
+        const encryptedBytes = await downloadFromCloudinary(fileURL);
+
+        const plainBytes = await decryptBytes(
+          new Uint8Array(encryptedBytes),
+          selectedFile.data.crypto,
+          password
+        );
+
+        const blob = new Blob([plainBytes], {
+          type: selectedFile.data.originalType || "application/octet-stream",
+        });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = selectedFile.data.filename || "file";
+        a.click();
+        URL.revokeObjectURL(url);
+
+        toast.success("File decrypted & downloaded! ✅");
+      } else {
+        // Share link flow - call Netlify function
+        const response = await fetch("/.netlify/functions/decrypt-share", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileURL: selectedFile.data.fileURL,
+            cryptoMeta: {
+              ...selectedFile.data.crypto,
+              originalType: selectedFile.data.originalType
+            },
+            password: password,
+            filename: selectedFile.data.filename
+          })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to create share link");
+        }
+
+        // Copy share URL to clipboard
+        await navigator.clipboard.writeText(result.shareURL);
+        toast.success("Share link copied to clipboard! 📋");
       }
 
-      // Download from Cloudinary
-      const encryptedBytes = await downloadFromCloudinary(fileURL);
-
-      const plainBytes = await decryptBytes(
-        new Uint8Array(encryptedBytes),
-        selectedFile.data.crypto,  // meta (crypto object)
-        password                    // passphrase
-      );
-
-      const blob = new Blob([plainBytes], {
-        type:
-          selectedFile.data.originalType || "application/octet-stream",
-      });
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = selectedFile.data.filename || "file";
-      a.click();
-      URL.revokeObjectURL(url);
+      setShowPassword(false);
+      setSelectedFile(null);
     } catch (err) {
-      console.error("❌ Decryption failed:", err);
-      alert("❌ Wrong password or corrupted file.");
+      console.error("❌ Error:", err);
+      setDecryptError(err.message || "Wrong password or failed");
+    } finally {
+      setIsDecrypting(false);
     }
   };
 
@@ -166,10 +219,7 @@ const MainData = ({ files, handleOptionsClick, optionsVisible, handleDelete }) =
                 <OptionsMenu className="options-menu">
                   {file.data.isEncrypted ? (
                     <MenuItem
-                      onClick={() => {
-                        setSelectedFile(file);
-                        setShowPassword(true);
-                      }}
+                      onClick={() => openDownloadModal(file)}
                     >
                       <DownloadIcon /> Decrypt & Download
                     </MenuItem>
@@ -195,6 +245,14 @@ const MainData = ({ files, handleOptionsClick, optionsVisible, handleDelete }) =
                     <CopyIcon /> Copy Link
                   </MenuItem>
 
+                  {/* Get Share Link for encrypted files - decrypts on server */}
+                  {file.data.isEncrypted && (
+                    <MenuItem onClick={() => openShareLinkModal(file)}>
+                      <ShareIcon /> Get Share Link 🔗
+                    </MenuItem>
+                  )}
+
+                  {/* Regular Share - social icons */}
                   <MenuItem
                     onClick={(e) => {
                       e.stopPropagation();
@@ -203,7 +261,7 @@ const MainData = ({ files, handleOptionsClick, optionsVisible, handleDelete }) =
                       );
                     }}
                   >
-                    <ShareIcon /> Share
+                    <ShareIcon /> Share via Social
                   </MenuItem>
 
                   {showShareIcons === file.id && (
@@ -232,6 +290,8 @@ const MainData = ({ files, handleOptionsClick, optionsVisible, handleDelete }) =
                     <DeleteIcon /> Delete
                   </MenuItem>
 
+                  <MenuDivider />
+
                   <Meta>
                     📅{" "}
                     {convertDates(file.data.timestamp?.seconds)}
@@ -253,11 +313,17 @@ const MainData = ({ files, handleOptionsClick, optionsVisible, handleDelete }) =
       {/* 🔐 Password Modal */}
       {showPassword && selectedFile && (
         <PasswordModal
-          onSubmit={handleDecryptConfirm}
+          title={modalMode === "download" ? "Decrypt & Download" : "Get Share Link"}
+          subtitle={`Enter password for "${selectedFile.data.filename}"`}
+          onSubmit={handlePasswordSubmit}
           onCancel={() => {
             setShowPassword(false);
             setSelectedFile(null);
+            setDecryptError("");
           }}
+          loading={isDecrypting}
+          error={decryptError}
+          isShareMode={modalMode === "share"}
         />
       )}
     </>
@@ -456,6 +522,17 @@ const Meta = styled.div`
   font-size: 13px;
   opacity: 0.7;
   pointer-events: none;
+`;
+
+const MenuDivider = styled.div`
+  width: 100%;
+  height: 1px;
+  background: #ccc;
+  margin: 8px 0;
+
+  body.dark-mode & {
+    background: #555;
+  }
 `;
 
 const SharePopover = styled.div`

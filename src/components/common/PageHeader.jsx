@@ -1,5 +1,3 @@
-
-
 import React from "react";
 import styled from "styled-components";
 import { ListsIcon, InfoIcon, GridIcon } from "./SvgIcons";
@@ -35,6 +33,18 @@ const DataHeader = styled.div`
     margin: 0px 10px;
     font-size: 25px;
     color: #5f6368;;
+  }
+
+  body.dark-mode & {
+    border-bottom-color: #5f6368;
+
+    .headerLeft p {
+      color: #e8eaed;
+    }
+
+    .headerRight svg {
+      color: #9aa0a6;
+    }
   }
 `;
 

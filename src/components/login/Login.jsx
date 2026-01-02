@@ -48,17 +48,16 @@ const Login = () => {
         <Button onClick={handleAuth}>Get Started</Button>
         <div className="text">
           <p>
-            A cloud-based storage service that enables users to store and access
-            files online
+            A secure cloud storage service for storing and sharing encrypted files
           </p>
           <p>
             Developed by{" "}
             <a
-              href="https://www.linkedin.com/in/mayank-gupta-752328173/"
+              href=""
               target="_blank"
               rel="noopener noreferrer"
             >
-              Team 5
+              Team 4
             </a>{" "}
           </p>
         </div>

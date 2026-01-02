@@ -144,6 +144,10 @@ const ModalHeading = styled.div`
   text-align: center;
   border-bottom: 1px solid lightgray;
   padding-bottom: 10px;
+
+  body.dark-mode & {
+    border-bottom-color: #5f6368;
+  }
 `;
 
 const ModalBody = styled.div`

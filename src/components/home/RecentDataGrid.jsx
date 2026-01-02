@@ -2,22 +2,51 @@ import React from "react";
 import styled from "styled-components";
 import FileIcons from "../common/FileIcons";
 
+// Get color based on file type
+const getFileColor = (type = "") => {
+  if (type.includes("image")) return { bg: "#e8f5e9", color: "#4caf50", darkBg: "#1b3d1f" };
+  if (type.includes("pdf")) return { bg: "#ffebee", color: "#f44336", darkBg: "#3d1f1f" };
+  if (type.includes("video")) return { bg: "#fff3e0", color: "#ff9800", darkBg: "#3d2f1f" };
+  if (type.includes("audio")) return { bg: "#f3e5f5", color: "#9c27b0", darkBg: "#2f1f3d" };
+  if (type.includes("zip") || type.includes("rar")) return { bg: "#fff8e1", color: "#ffc107", darkBg: "#3d3a1f" };
+  if (type.includes("doc") || type.includes("word")) return { bg: "#e3f2fd", color: "#2196f3", darkBg: "#1f2d3d" };
+  if (type.includes("sheet") || type.includes("excel")) return { bg: "#e8f5e9", color: "#4caf50", darkBg: "#1f3d2f" };
+  return { bg: "#f5f5f5", color: "#757575", darkBg: "#2a2a2a" };
+};
+
 const RecentDataGrid = ({ files }) => {
   return (
     <DataGrid>
-      {files.slice(0, 10).map((file) => (
-        <DataFile
-          key={file.id}
-          href={file.data.fileURL}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <FileIcons type={file.data.contentType} />
-          <p title={file.data.filename}>{file.data.filename}</p>
-        </DataFile>
-      ))}
+      {files.slice(0, 10).map((file) => {
+        const colors = getFileColor(file.data.contentType || file.data.originalType);
+        return (
+          <DataFile key={file.id}>
+            <IconWrapper $bgColor={colors.bg} $darkBg={colors.darkBg}>
+              <FileIcons type={file.data.contentType || file.data.originalType} />
+            </IconWrapper>
+            <FileInfo>
+              <FileName title={file.data.filename}>
+                {file.data.crypto ? "🔐 " : ""}{file.data.filename}
+              </FileName>
+              <FileType>{getFileTypeLabel(file.data.contentType || file.data.originalType)}</FileType>
+            </FileInfo>
+          </DataFile>
+        );
+      })}
     </DataGrid>
   );
+};
+
+// Get human-readable file type
+const getFileTypeLabel = (type = "") => {
+  if (type.includes("image")) return "Image";
+  if (type.includes("pdf")) return "PDF";
+  if (type.includes("video")) return "Video";
+  if (type.includes("audio")) return "Audio";
+  if (type.includes("zip") || type.includes("rar")) return "Archive";
+  if (type.includes("doc") || type.includes("word")) return "Document";
+  if (type.includes("sheet") || type.includes("excel")) return "Spreadsheet";
+  return "File";
 };
 
 export default RecentDataGrid;
@@ -27,28 +56,18 @@ const DataGrid = styled.div`
   width: 100%;
   margin-top: 25px;
   margin-bottom: 25px;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 12px;
-  overflow: hidden;
 
-  /* 🖥 Desktop — grid layout */
-  @media screen and (min-width: 769px) {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    overflow: visible;
-  }
-
-  /* 📱 Mobile — horizontal scroll, show only two */
   @media screen and (max-width: 768px) {
     display: flex;
-    flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
-    gap: 14px;
-    padding: 10px 8px;
+    gap: 12px;
+    padding: 8px 4px;
     scrollbar-width: none;
     &::-webkit-scrollbar {
       display: none;
@@ -56,69 +75,85 @@ const DataGrid = styled.div`
   }
 `;
 
-const DataFile = styled.a`
-  text-align: center;
-  border: 1px solid rgba(204, 204, 204, 0.46);
-  border-radius: 10px;
+const DataFile = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
   background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  padding: 12px 0 0 0;
-  text-decoration: none;
-  transition: transform 0.2s ease, background 0.3s, color 0.3s, border-color 0.3s;
-  flex: 0 0 calc(50% - 8px); /* ✅ Show exactly 2 on mobile */
-  scroll-snap-align: start;
-  max-width: 240px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 180px;
 
   &:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
-  svg {
-    font-size: 50px;
-    color: gray;
-    transition: color 0.3s;
-  }
-
-  p {
-    color: #111827;
-    font-weight: 600;
-    font-size: 13px;
-    border-top: 1px solid #e5e7eb;
-    margin-top: 6px;
-    background: #f9fafb;
-    padding: 10px 5px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    transition: background 0.3s, color 0.3s, border-color 0.3s;
-  }
-
-  /* 🌙 App-wide Dark Mode (based on .dark-mode class) */
   body.dark-mode & {
     background: #1f2937;
     border-color: #374151;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-
-    svg {
-      color: #9ca3af;
-    }
-
-    p {
-      background: #111827;
-      color: #e5e7eb;
-      border-top-color: #374151;
-    }
 
     &:hover {
-      background: #2d3748;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     }
   }
 
   @media screen and (max-width: 768px) {
-    flex: 0 0 calc(50% - 8px); /* Two visible at once */
-  }
-
-  @media screen and (max-width: 480px) {
-    flex: 0 0 85%;
+    flex: 0 0 160px;
+    scroll-snap-align: start;
   }
 `;
+
+const IconWrapper = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: ${props => props.$bgColor || "#f5f5f5"};
+  flex-shrink: 0;
+
+  svg {
+    font-size: 22px;
+    color: #5f6368;
+  }
+
+  body.dark-mode & {
+    background: ${props => props.$darkBg || "#2a2a2a"};
+  }
+`;
+
+const FileInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+const FileName = styled.div`
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  body.dark-mode & {
+    color: #e5e7eb;
+  }
+`;
+
+const FileType = styled.div`
+  font-size: 11px;
+  color: #6b7280;
+
+  body.dark-mode & {
+    color: #9ca3af;
+  }
+`;
+
