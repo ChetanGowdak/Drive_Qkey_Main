@@ -8,14 +8,15 @@ import {
   AudioIcon,
   VideoIcon,
 } from "./SvgIcons";
-const FileIcons = ({ type }) => {
-  return type.includes("pdf") ? (
+const FileIcons = ({ type = "" }) => {
+  const t = type || "";
+  return t.includes("pdf") ? (
     <PdfIcon />
-  ) : type.includes("image") ? (
+  ) : t.includes("image") ? (
     <PermMediaIcon />
-  ) : type.includes("video") ? (
+  ) : t.includes("video") ? (
     <VideoIcon />
-  ) : type.includes("audio") ? (
+  ) : t.includes("audio") ? (
     <AudioIcon />
   ) : (
     <FileIcon />
