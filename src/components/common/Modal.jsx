@@ -1,217 +1,276 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { Modal } from "@mui/material";
 import Lottie from "react-lottie-player";
 import linkedInJson from "../lottie/linkedInLottie.json";
 import githubJson from "../lottie/githubLottie.json";
 import closeJson from "../lottie/closeLottie.json";
 
+const teamMembers = [
+  {
+    name: "Chetan Gowda K",
+    email: "chetangowdak@gmail.com",
+    image: "/WhatsApp Image 2025-10-27 at 10.07.24.jpeg",
+    github: "https://github.com/ChetanGowdak",
+    linkedin: "https://www.linkedin.com/in/chetan-gowda-23a04938b",
+  },
+  {
+    name: "M Premananda",
+    email: "premananda@gmail.com",
+    image: "/WhatsApp Image 2025-10-27 at 10.06.45.jpeg",
+    github: "https://github.com/M-Premananda",
+    linkedin: "https://www.linkedin.com/in/m-premananda-385110355/",
+  },
+  {
+    name: "Ganesh",
+    email: "ganesh@gmail.com",
+    image: "/WhatsApp Image 2025-10-27 at 10.16.25.jpeg",
+    github: "https://github.com/Ganesh7846",
+    linkedin: "https://www.linkedin.com/in/ganesh-n-bambulage-340691380/",
+  },
+  {
+    name: "Aishwarya K",
+    email: "aishwarya@gmail.com",
+    image: "/WhatsApp Image 2025-10-27 at 10.10.24.jpeg",
+    github: "https://github.com/Aishubidda",
+    linkedin: "https://www.linkedin.com/in/aishwarya17407",
+  }
+];
+
 const HelpModal = ({ openHelp, closeHelpModal }) => {
   return (
     <Modal open={openHelp} onClose={closeHelpModal}>
-      <ModalPopup>
-        <span onClick={closeHelpModal}>
+      <ModalContainer>
+        <CloseButton onClick={closeHelpModal}>
           <Lottie
             loop
             animationData={closeJson}
             play
-            style={{ width: 40, height: 40 }}
+            style={{ width: 32, height: 32 }}
           />
-        </span>
+        </CloseButton>
 
-        <ModalHeading>
-          <h3>Need Help?</h3>
-        </ModalHeading>
+        {/* Header */}
+        <ModalHeader>
+          <LogoImage src="/logo.png" alt="QCrypt Cloud" />
+          <HeaderText>
+            <h2>QCrypt Cloud</h2>
+            <TeamBadge>TEAM 4</TeamBadge>
+          </HeaderText>
+        </ModalHeader>
 
-        <ModalBody>
-          {/* 👤 Chetan */}
-          <ProfileCard>
-            <div className="image">
-              <img src="\WhatsApp Image 2025-10-27 at 10.07.24.jpeg" alt="Chetan Gowda" />
-            </div>
-            <h2>Chetan Gowda K</h2>
-            <p>Contact Me:</p>
-            <div className="links">
-              <a href="https://github.com/ChetanGowdak" target="_blank" rel="noopener noreferrer">
-                <Lottie loop animationData={githubJson} play style={{ width: 50, height: 50 }} />
-                Github
-              </a>
-              <a href="https://www.linkedin.com/in/chetan-gowda-23a04938b" target="_blank" rel="noopener noreferrer">
-                <Lottie loop animationData={linkedInJson} play style={{ width: 50, height: 50 }} />
-                LinkedIn
-              </a>
-            </div>
-          </ProfileCard>
+        {/* Team List - Vertical cards */}
+        <TeamList>
+          {teamMembers.map((member, index) => (
+            <TeamCard key={index} $delay={index * 0.08}>
+              {/* Photo with gradient border */}
+              <PhotoWrapper>
+                <MemberPhoto>
+                  <img src={member.image} alt={member.name} />
+                </MemberPhoto>
+              </PhotoWrapper>
 
-          {/* 👤 Premananda */}
-          <ProfileCard>
-            <div className="image">
-              <img src="/WhatsApp Image 2025-10-27 at 10.06.45.jpeg" alt="M Premananda" />
-            </div>
-            <h2>M Premananda</h2>
-            <p>Contact Me:</p>
-            <div className="links">
-              <a href="https://github.com/M-Premananda" target="_blank" rel="noopener noreferrer">
-                <Lottie loop animationData={githubJson} play style={{ width: 50, height: 50 }} />
-                Github
-              </a>
-              <a href="https://www.linkedin.com/in/m-premananda-385110355/" target="_blank" rel="noopener noreferrer">
-                <Lottie loop animationData={linkedInJson} play style={{ width: 50, height: 50 }} />
-                LinkedIn
-              </a>
-            </div>
-          </ProfileCard>
+              {/* Info */}
+              <MemberInfo>
+                <MemberName>{member.name}</MemberName>
+                <MemberEmail>📧 {member.email}</MemberEmail>
+              </MemberInfo>
 
-          {/* 👤 Ganesh */}
-          <ProfileCard>
-            <div className="image">
-              <img src="/WhatsApp Image 2025-10-27 at 10.16.25.jpeg" alt="Ganesh" />
-            </div>
-            <h2>Ganesh</h2>
-            <p>Contact Me:</p>
-            <div className="links">
-              <a href="https://github.com/Ganesh7846" target="_blank" rel="noopener noreferrer">
-                <Lottie loop animationData={githubJson} play style={{ width: 50, height: 50 }} />
-                Github
-              </a>
-              <a href="https://www.linkedin.com/in/ganesh-n-bambulage-340691380/" target="_blank" rel="noopener noreferrer">
-                <Lottie loop animationData={linkedInJson} play style={{ width: 50, height: 50 }} />
-                LinkedIn
-              </a>
-            </div>
-          </ProfileCard>
-
-          {/* 👤 Aishwarya */}
-          <ProfileCard>
-            <div className="image">
-              <img src="/WhatsApp Image 2025-10-27 at 10.10.24.jpeg" alt="Aishwarya K" />
-            </div>
-            <h2>Aishwarya K</h2>
-            <p>Contact Me:</p>
-            <div className="links">
-              <a href="https://github.com/Aishubidda" target="_blank" rel="noopener noreferrer">
-                <Lottie loop animationData={githubJson} play style={{ width: 50, height: 50 }} />
-                Github
-              </a>
-              <a href="https://www.linkedin.com/in/aishwarya17407" target="_blank" rel="noopener noreferrer">
-                <Lottie loop animationData={linkedInJson} play style={{ width: 50, height: 50 }} />
-                LinkedIn
-              </a>
-            </div>
-          </ProfileCard>
-        </ModalBody>
-      </ModalPopup>
+              {/* Social Links */}
+              <SocialLinks>
+                <SocialBtn href={member.github} target="_blank" rel="noopener noreferrer">
+                  <Lottie loop animationData={githubJson} play style={{ width: 24, height: 24 }} />
+                </SocialBtn>
+                <SocialBtn href={member.linkedin} target="_blank" rel="noopener noreferrer">
+                  <Lottie loop animationData={linkedInJson} play style={{ width: 24, height: 24 }} />
+                </SocialBtn>
+              </SocialLinks>
+            </TeamCard>
+          ))}
+        </TeamList>
+      </ModalContainer>
     </Modal>
   );
 };
 
 export default HelpModal;
 
-/* ✅ Styles */
-const ModalPopup = styled.div`
+/* ================= ANIMATIONS ================= */
+
+const fadeIn = keyframes`
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+`;
+
+const slideIn = keyframes`
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+`;
+
+/* ================= STYLES ================= */
+
+const ModalContainer = styled.div`
+  position: absolute;
   top: 50%;
-  background-color: var(--bg);
-  color: var(--text);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   width: 100%;
-  max-width: 500px;
-  margin: 0 auto;
-  position: relative;
-  transform: translateY(-50%);
-  padding: 15px;
-  border-radius: 10px;
-  max-height: 80vh;
+  max-width: 460px;
+  max-height: 85vh;
+  padding: 28px;
+  border-radius: 24px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+  animation: ${fadeIn} 0.3s ease;
   overflow-y: auto;
-  border: 1px solid var(--border);
-  transition: all 0.3s ease;
 
-  span {
-    position: absolute;
-    right: 10px;
-    top: 8px;
-    cursor: pointer;
-  }
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: rgba(100, 100, 100, 0.3);
-    border-radius: 3px;
+  @media (max-width: 500px) {
+    max-width: 95%;
+    padding: 20px;
   }
 `;
 
-const ModalHeading = styled.div`
-  text-align: center;
-  border-bottom: 1px solid lightgray;
-  padding-bottom: 10px;
+const CloseButton = styled.button`
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.2s ease;
 
-  body.dark-mode & {
-    border-bottom-color: #5f6368;
+  &:hover {
+    opacity: 1;
+    transform: rotate(90deg);
   }
 `;
 
-const ModalBody = styled.div`
+const ModalHeader = styled.div`
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  text-align: center;
-  padding-top: 15px;
-  color: var(--text);
+  gap: 14px;
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
 `;
 
-const ProfileCard = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  width: 100%;
+const LogoImage = styled.img`
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+`;
 
-  .image {
-    width: 130px;
-    height: 130px;
-    border-radius: 50%;
-    overflow: hidden;
-    margin-bottom: 1rem;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-      filter: brightness(0.95);
-    }
-  }
-
+const HeaderText = styled.div`
   h2 {
-    margin: 0;
-    font-size: 1.1rem;
+    font-size: 1.35rem;
+    font-weight: 700;
     color: var(--text);
+    margin: 0 0 6px;
   }
+`;
 
-  p {
-    margin: 0.5rem 0;
-    text-decoration: underline;
-    font-size: 0.9rem;
+const TeamBadge = styled.span`
+  display: inline-block;
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 3px 10px;
+  border-radius: 50px;
+`;
+
+const TeamList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const TeamCard = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  transition: all 0.25s ease;
+  animation: ${slideIn} 0.4s ease backwards;
+  animation-delay: ${props => props.$delay}s;
+
+  &:hover {
+    transform: translateX(6px);
+    border-color: var(--primary);
+    box-shadow: 0 4px 20px rgba(14, 165, 233, 0.12);
   }
+`;
 
-  .links {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+const PhotoWrapper = styled.div`
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  padding: 3px;
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  border-radius: 50%;
+`;
 
-    a {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-decoration: none;
-      color: var(--text);
-      font-size: 0.9rem;
+const MemberPhoto = styled.div`
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-tertiary);
 
-      &:hover {
-        opacity: 0.8;
-      }
-    }
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+const MemberInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const MemberName = styled.h4`
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const MemberEmail = styled.span`
+  font-size: 11px;
+  color: var(--text-muted);
+`;
+
+const SocialLinks = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
+const SocialBtn = styled.a`
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1);
+    border-color: var(--primary);
+    background: var(--gradient-glow);
   }
 `;

@@ -145,7 +145,7 @@ const Sidebar = () => {
         />
       )}
 
-      <SidebarContainer sidebarbool={sidebarBool ? "true" : "false"}>
+      <SidebarContainer $isOpen={sidebarBool}>
         <AddFile onClick={() => setOpen(true)} />
         <SidebarTabs />
       </SidebarContainer>
@@ -158,15 +158,17 @@ export default Sidebar;
 /* ================= STYLES ================= */
 
 const SidebarContainer = styled.div`
-  width: 180px;
-  padding-top: 10px;
+  width: 200px;
+  min-height: calc(100vh - 70px);
+  padding-top: 8px;
+  background: var(--bg-secondary);
   border-right: 1px solid var(--border);
-  transition: all 0.1s linear;
-  position: ${(props) =>
-    props.sidebarbool === "true" ? "relative" : "absolute"};
-  left: ${(props) => (props.sidebarbool === "true" ? "0" : "-100%")};
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: ${(props) => props.$isOpen ? "relative" : "absolute"};
+  left: ${(props) => props.$isOpen ? "0" : "-100%"};
+  z-index: 100;
 
   @media screen and (max-width: 768px) {
-    width: 65px;
+    width: 70px;
   }
 `;

@@ -29,22 +29,26 @@ const Recent = () => {
 
   return (
     <RecentContainer>
-      <PageHeader pageTitle={"Recents"} />
+      <PageHeader pageTitle={"Recent"} />
       <Suspense fallback={<LoaderContainer />}>
         <FilesList
           data={files?.slice(0, 9)}
           imagePath={"/recent.svg"}
           text1={"No recent files"}
-          text2={"See all the files you’ve recently edited or added"}
+          text2={"See all the files you've recently edited or added"}
         />
       </Suspense>
     </RecentContainer>
   );
 };
 
+export default Recent;
+
 const RecentContainer = styled.div`
   flex: 1;
-  padding: 10px 10px 0px 20px;
+  padding: 16px 20px 0 20px;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 `;
-
-export default Recent;

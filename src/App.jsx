@@ -14,7 +14,6 @@ import Data from "./components/home/Data";
 import CryptoTest from "./components/test/CryptoTest";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const router = createBrowserRouter([

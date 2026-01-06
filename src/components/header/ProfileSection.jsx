@@ -1,21 +1,25 @@
 import React from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import { auth } from "../../firebase";
 
-const ProfileSection = ({ userPhoto, userName, handleAuth, showSearch, setShowSearch }) => {
+const ProfileSection = ({ userPhoto, userName, handleAuth }) => {
   const email = auth?.currentUser?.email || "Not Available";
 
   return (
     <RightSection>
       <SignOut>
-        <UserImg src={userPhoto} alt={userName} />
+        <AvatarWrapper>
+          <UserImg src={userPhoto} alt={userName} />
+          <GradientRing />
+        </AvatarWrapper>
         <DropDown>
           <ProfileCard>
             <ProfileImageLarge>
               <img src={userPhoto} alt="Profile" />
+              <GradientRingLarge />
             </ProfileImageLarge>
 
             <InfoRow>
@@ -42,11 +46,54 @@ const ProfileSection = ({ userPhoto, userName, handleAuth, showSearch, setShowSe
 
 export default ProfileSection;
 
-// ✅ Styled Components
+/* ================= ANIMATIONS ================= */
+
+const rotate = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+
+const fadeInScale = keyframes`
+  from { 
+    opacity: 0; 
+    transform: translateY(-10px) scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+`;
+
+/* ================= STYLES ================= */
+
 const RightSection = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
+`;
+
+const AvatarWrapper = styled.div`
+  position: relative;
+  width: 44px;
+  height: 44px;
+`;
+
+const GradientRing = styled.div`
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6, #f472b6, #0ea5e9);
+  background-size: 300% 300%;
+  animation: ${rotate} 3s linear infinite;
+  z-index: -1;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+  }
 `;
 
 const UserImg = styled.img`
@@ -54,20 +101,20 @@ const UserImg = styled.img`
   width: 100%;
   object-fit: cover;
   border-radius: 50%;
+  position: relative;
+  z-index: 1;
 `;
 
 const DropDown = styled.div`
   position: absolute;
-  top: 55px;
-  right: -40px;
+  top: 60px;
+  right: -20px;
   display: none;
   z-index: 1000;
 `;
 
 const SignOut = styled.div`
   position: relative;
-  height: 45px;
-  width: 45px;
   cursor: pointer;
 
   &:hover ${DropDown} {
@@ -76,104 +123,117 @@ const SignOut = styled.div`
 `;
 
 const ProfileCard = styled.div`
-  background: white;
-  width: 260px;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  width: 280px;
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-lg);
   text-align: left;
-  animation: fadeIn 0.2s ease-in-out;
+  animation: ${fadeInScale} 0.2s ease-out;
 
-  body.dark-mode & {
-    background: #2b2c2f !important;
-    color: #f1f1f1 !important;
-    box-shadow: 0px 4px 15px rgba(255, 255, 255, 0.1) !important;
+  &::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 30px;
+    width: 12px;
+    height: 12px;
+    background: var(--glass-bg);
+    border-left: 1px solid var(--glass-border);
+    border-top: 1px solid var(--glass-border);
+    transform: rotate(45deg);
   }
 `;
 
 const ProfileImageLarge = styled.div`
-  width: 70px;
-  height: 70px;
-  margin: 0 auto 10px;
-  border-radius: 50%;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-
-  body.dark-mode & {
-    box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
-  }
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 16px;
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 50%;
+    position: relative;
+    z-index: 1;
   }
+`;
+
+const GradientRingLarge = styled(GradientRing)`
+  inset: -4px;
 `;
 
 const InfoRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 6px 0;
+  gap: 10px;
+  margin: 10px 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--bg-tertiary);
+  transition: all 0.2s ease;
 
   svg {
-    color: #5f6368;
+    color: var(--primary);
+    font-size: 20px;
   }
 
   .name {
     font-weight: 600;
     font-size: 14px;
+    color: var(--text);
   }
 
   .email {
     font-size: 12px;
-    color: gray;
+    color: var(--text-muted);
+    word-break: break-all;
   }
 
-  body.dark-mode .email {
-    color: #bfbfbf;
+  &:hover {
+    background: var(--gradient-glow);
+    transform: translateX(4px);
   }
 `;
 
 const Divider = styled.div`
   height: 1px;
   width: 100%;
-  background: #e0e0e0;
-  margin: 10px 0;
-
-  body.dark-mode & {
-    background: #3a3b3f;
-  }
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 16px 0;
 `;
 
 const SignOutButton = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 8px;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
   cursor: pointer;
-  color: #d93025;
+  color: white;
   font-weight: 600;
-  transition: background 0.2s;
-
-  &:hover {
-    background: #f1f1f1;
-  }
+  font-size: 14px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
 
   svg {
-    color: #d93025;
+    color: white;
+    font-size: 20px;
   }
 
-  body.dark-mode & {
-    color: #ff6b6b !important;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
   }
 
-  body.dark-mode &:hover {
-    background: rgba(255, 255, 255, 0.08) !important;
-  }
-
-  body.dark-mode svg {
-    color: #ff6b6b;
+  &:active {
+    transform: translateY(0);
   }
 `;

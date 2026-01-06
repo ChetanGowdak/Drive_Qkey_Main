@@ -40,6 +40,13 @@ const PasswordModal = ({
 
   return ReactDOM.createPortal(
     <Overlay onClick={onCancel}>
+      {/* Floating Orbs Background */}
+      <FloatingOrbs>
+        <Orb className="orb1" />
+        <Orb className="orb2" />
+        <Orb className="orb3" />
+      </FloatingOrbs>
+
       <ModalBox
         onClick={(e) => e.stopPropagation()}
         $shake={shake}
@@ -72,6 +79,7 @@ const PasswordModal = ({
           >
             {showPassword ? "👁️" : "👁️‍🗨️"}
           </ToggleButton>
+          <InputGlow $error={!!error} $focused={true} />
         </InputWrapper>
 
         {/* Error Message */}
@@ -94,7 +102,10 @@ const PasswordModal = ({
             {loading ? (
               <Spinner />
             ) : (
-              isShareMode ? "Get Link" : "Confirm"
+              <>
+                {isShareMode ? "Get Link" : "Confirm"}
+                <ShimmerOverlay />
+              </>
             )}
           </SubmitButton>
         </Actions>
@@ -116,7 +127,7 @@ const fadeIn = keyframes`
 const slideUp = keyframes`
   from { 
     opacity: 0;
-    transform: translateY(20px) scale(0.95);
+    transform: translateY(30px) scale(0.95);
   }
   to { 
     opacity: 1;
@@ -126,8 +137,8 @@ const slideUp = keyframes`
 
 const shakeAnim = keyframes`
   0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-8px); }
-  40%, 80% { transform: translateX(8px); }
+  20%, 60% { transform: translateX(-10px); }
+  40%, 80% { transform: translateX(10px); }
 `;
 
 const spin = keyframes`
@@ -135,58 +146,117 @@ const spin = keyframes`
   to { transform: rotate(360deg); }
 `;
 
+const float = keyframes`
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33% { transform: translateY(-20px) rotate(5deg); }
+  66% { transform: translateY(15px) rotate(-5deg); }
+`;
+
+const shimmer = keyframes`
+  0% { left: -100%; }
+  100% { left: 100%; }
+`;
+
+const glow = keyframes`
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+`;
+
 /* ================= STYLES ================= */
 
 const Overlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 999999;
   animation: ${fadeIn} 0.2s ease;
+  overflow: hidden;
+`;
 
-  body.dark-mode & {
-    background: rgba(0, 0, 0, 0.7);
+const FloatingOrbs = styled.div`
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+`;
+
+const Orb = styled.div`
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  animation: ${float} 10s ease-in-out infinite;
+
+  &.orb1 {
+    width: 300px;
+    height: 300px;
+    background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+    top: 10%;
+    left: 10%;
+    animation-delay: 0s;
+  }
+
+  &.orb2 {
+    width: 250px;
+    height: 250px;
+    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+    top: 50%;
+    right: 10%;
+    animation-delay: -3s;
+  }
+
+  &.orb3 {
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(135deg, #f472b6, #ec4899);
+    bottom: 10%;
+    left: 30%;
+    animation-delay: -6s;
   }
 `;
 
 const ModalBox = styled.div`
-  width: 380px;
+  width: 400px;
   max-width: 90vw;
-  background: #ffffff;
-  color: #202124;
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
-  animation: ${slideUp} 0.3s ease;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: var(--text);
+  padding: 28px;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: ${slideUp} 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  z-index: 1;
+  
   ${props => props.$shake && `animation: ${shakeAnim} 0.5s ease;`}
-
-  body.dark-mode & {
-    background: #2d2d2d;
-    color: #e8eaed;
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
-  }
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 20px;
+  gap: 16px;
+  margin-bottom: 24px;
 `;
 
 const LockIcon = styled.div`
-  font-size: 32px;
-  width: 48px;
-  height: 48px;
+  font-size: 28px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3);
 `;
 
 const TitleSection = styled.div`
@@ -195,151 +265,155 @@ const TitleSection = styled.div`
 
 const Title = styled.h3`
   margin: 0;
-  font-size: 18px;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: #202124;
-
-  body.dark-mode & {
-    color: #e8eaed;
-  }
+  color: var(--text);
 `;
 
 const Subtitle = styled.p`
   margin: 4px 0 0;
   font-size: 13px;
-  color: #5f6368;
-
-  body.dark-mode & {
-    color: #9aa0a6;
-  }
+  color: var(--text-muted);
+  line-height: 1.4;
 `;
 
 const InputWrapper = styled.div`
   position: relative;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+`;
+
+const InputGlow = styled.div`
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  background: ${props => props.$error
+    ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+    : 'linear-gradient(135deg, #0ea5e9, #8b5cf6, #f472b6)'};
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+  filter: blur(6px);
+  animation: ${glow} 2s ease-in-out infinite;
+
+  ${InputWrapper}:focus-within & {
+    opacity: 0.6;
+  }
 `;
 
 const PasswordInput = styled.input`
   width: 100%;
-  padding: 14px 48px 14px 16px;
-  border-radius: 10px;
-  border: 2px solid ${props => props.$error ? '#ea4335' : '#dadce0'};
-  background: #f8f9fa;
-  color: #202124;
+  padding: 16px 52px 16px 18px;
+  border-radius: 12px;
+  border: 2px solid ${props => props.$error ? 'var(--error)' : 'var(--border)'};
+  background: var(--bg-secondary);
+  color: var(--text);
   font-size: 15px;
+  font-weight: 500;
   outline: none;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 
   &:focus {
-    border-color: ${props => props.$error ? '#ea4335' : '#1a73e8'};
-    background: #fff;
-    box-shadow: 0 0 0 3px ${props => props.$error ? 'rgba(234, 67, 53, 0.15)' : 'rgba(26, 115, 232, 0.15)'};
+    border-color: ${props => props.$error ? 'var(--error)' : 'var(--primary)'};
+    background: var(--bg-secondary);
   }
 
   &::placeholder {
-    color: #80868b;
+    color: var(--text-muted);
+    font-weight: 400;
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-
-  body.dark-mode & {
-    background: #3c3c3c;
-    border-color: ${props => props.$error ? '#ea4335' : '#5f6368'};
-    color: #e8eaed;
-
-    &:focus {
-      background: #404040;
-      border-color: ${props => props.$error ? '#ea4335' : '#8ab4f8'};
-      box-shadow: 0 0 0 3px ${props => props.$error ? 'rgba(234, 67, 53, 0.2)' : 'rgba(138, 180, 248, 0.2)'};
-    }
-
-    &::placeholder {
-      color: #9aa0a6;
-    }
-  }
 `;
 
 const ToggleButton = styled.button`
   position: absolute;
-  right: 12px;
+  right: 14px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 20px;
   padding: 4px;
   opacity: 0.7;
-  transition: opacity 0.2s;
+  transition: all 0.2s ease;
 
   &:hover {
     opacity: 1;
+    transform: translateY(-50%) scale(1.1);
   }
 `;
 
 const ErrorText = styled.p`
   margin: 0 0 12px;
   font-size: 13px;
-  color: #ea4335;
+  color: var(--error);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &::before {
+    content: '⚠️';
+    font-size: 14px;
+  }
 `;
 
 const Actions = styled.div`
-  margin-top: 20px;
+  margin-top: 24px;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
 `;
 
 const CancelButton = styled.button`
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
   background: transparent;
-  color: #5f6368;
+  color: var(--text-muted);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 
   &:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--bg-tertiary);
+    border-color: var(--text-muted);
+    color: var(--text);
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-
-  body.dark-mode & {
-    color: #9aa0a6;
-
-    &:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.08);
-    }
   }
 `;
 
 const SubmitButton = styled.button`
-  padding: 10px 24px;
-  border-radius: 8px;
+  position: relative;
+  padding: 12px 28px;
+  border-radius: 12px;
   border: none;
-  background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 50%, #f472b6 100%);
+  background-size: 200% 200%;
+  color: white;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 100px;
+  transition: all 0.4s ease;
+  min-width: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
 
   &:hover:not(:disabled) {
-    background: linear-gradient(135deg, #1557b0 0%, #0d47a1 100%);
-    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+    background-position: 100% 50%;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
   }
 
   &:disabled {
@@ -348,11 +422,27 @@ const SubmitButton = styled.button`
   }
 `;
 
+const ShimmerOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: ${shimmer} 3s ease-in-out infinite;
+  pointer-events: none;
+`;
+
 const Spinner = styled.div`
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #fff;
+  border-top-color: white;
   border-radius: 50%;
   animation: ${spin} 0.8s linear infinite;
 `;

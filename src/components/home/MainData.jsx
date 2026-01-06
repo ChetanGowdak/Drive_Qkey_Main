@@ -1,6 +1,6 @@
-// ✅ FINAL LOCKED MAIN DATA — GOOGLE DRIVE STYLE (220px, fade, arrow, no push layout, meta inside)
+// ✅ Premium MainData - Glassmorphic Design with Animations
 import React, { useState, useEffect } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import {
   ArrowDownIcon,
   MoreOptionsIcon,
@@ -82,7 +82,6 @@ const MainData = ({ files, handleOptionsClick, optionsVisible, handleDelete }) =
 
     try {
       if (modalMode === "download") {
-        // Download flow - decrypt locally
         const fileURL = selectedFile.data?.fileURL;
         if (!fileURL) {
           throw new Error("Missing URL to encrypted file.");
@@ -109,7 +108,6 @@ const MainData = ({ files, handleOptionsClick, optionsVisible, handleDelete }) =
 
         toast.success("File decrypted & downloaded! ✅");
       } else {
-        // Share link flow - call Netlify function
         const response = await fetch("/.netlify/functions/decrypt-share", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -130,7 +128,6 @@ const MainData = ({ files, handleOptionsClick, optionsVisible, handleDelete }) =
           throw new Error(result.error || "Failed to create share link");
         }
 
-        // Copy share URL to clipboard
         await navigator.clipboard.writeText(result.shareURL);
         toast.success("Share link copied to clipboard! 📋");
       }
@@ -139,7 +136,8 @@ const MainData = ({ files, handleOptionsClick, optionsVisible, handleDelete }) =
       setSelectedFile(null);
     } catch (err) {
       console.error("❌ Error:", err);
-      setDecryptError(err.message || "Wrong password or failed");
+      toast.error(err.message || "Wrong password or failed");
+      // setDecryptError(err.message || "Wrong password or failed");
     } finally {
       setIsDecrypting(false);
     }
@@ -148,160 +146,141 @@ const MainData = ({ files, handleOptionsClick, optionsVisible, handleDelete }) =
   return (
     <>
       {files.length > 0 && (
-        <DataListRow>
-          <div>
-            <b>
-              <ArrowDownIcon /> Name
-            </b>
+        <DataListHeader>
+          <div className="name-col">
+            <ArrowDownIcon />
+            <b>Name</b>
           </div>
-          <div className="fileSize">
-            <b>File Size</b>
+          <div className="size-col">
+            <b>Size</b>
           </div>
-          <div className="modified">
-            <b>Last Modified</b>
+          <div className="date-col">
+            <b>Modified</b>
           </div>
-          <div>
-            <b>Options</b>
+          <div className="actions-col">
+            <b>Actions</b>
           </div>
-        </DataListRow>
+        </DataListHeader>
       )}
 
       {files.length > 0 ? (
-        files.map((file) => (
-          <DataListRow key={file.id}>
-            <div>
-              <p className="starr" onClick={() => handleStarred(file.id)}>
-                {file.data.starred ? <StarFilledIcon /> : <StarBorderIcon />}
-              </p>
+        <FileListContainer>
+          {files.map((file, index) => (
+            <DataListRow key={file.id} style={{ animationDelay: `${index * 0.05}s` }}>
+              <div className="name-col">
+                <StarButton onClick={() => handleStarred(file.id)}>
+                  {file.data.starred ? <StarFilledIcon /> : <StarBorderIcon />}
+                </StarButton>
 
-              {file.data.isEncrypted ? (
-                <>
-                  <FileIcons
-                    type={
-                      file.data.originalType || file.data.contentType
-                    }
-                  />
-                  <span>🔒 {file.data.filename}</span>
-                </>
-              ) : (
-                <a
-                  href={file.data.fileURL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                {file.data.isEncrypted ? (
+                  <FileInfo>
+                    <FileIcons type={file.data.originalType || file.data.contentType} />
+                    <span className="filename">
+                      <LockBadge>🔒</LockBadge>
+                      {file.data.filename}
+                    </span>
+                  </FileInfo>
+                ) : (
+                  <FileLink href={file.data.fileURL} target="_blank" rel="noopener noreferrer">
+                    <FileIcons type={file.data.contentType} />
+                    <span className="filename">{file.data.filename}</span>
+                  </FileLink>
+                )}
+              </div>
+
+              <div className="size-col">
+                {changeBytes(file.data.size)}
+              </div>
+              <div className="date-col">
+                {convertDates(file.data.timestamp?.seconds)}
+              </div>
+
+              <div className="actions-col">
+                <OptionsTrigger
+                  className="options-trigger"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOptionsClick(file.id === optionsVisible ? null : file.id);
+                  }}
                 >
-                  <FileIcons type={file.data.contentType} />
-                  <span>{file.data.filename}</span>
-                </a>
-              )}
-            </div>
+                  <MoreOptionsIcon />
+                </OptionsTrigger>
 
-            <div className="fileSize">
-              {changeBytes(file.data.size)}
-            </div>
-            <div className="modified">
-              {convertDates(file.data.timestamp?.seconds)}
-            </div>
+                {optionsVisible === file.id && (
+                  <OptionsMenu className="options-menu">
+                    <MenuArrow />
 
-            <div style={{ position: "relative" }}>
-              <OptionsTrigger
-                className="options-trigger"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleOptionsClick(
-                    file.id === optionsVisible ? null : file.id
-                  );
-                }}
-              >
-                <MoreOptionsIcon />
-              </OptionsTrigger>
+                    {file.data.isEncrypted ? (
+                      <MenuItem onClick={() => openDownloadModal(file)}>
+                        <DownloadIcon /> Download
+                      </MenuItem>
+                    ) : (
+                      <MenuItem as="a" href={file.data.fileURL} download target="_blank">
+                        <DownloadIcon /> Download
+                      </MenuItem>
+                    )}
 
-              {optionsVisible === file.id && (
-                <OptionsMenu className="options-menu">
-                  {file.data.isEncrypted ? (
                     <MenuItem
-                      onClick={() => openDownloadModal(file)}
+                      onClick={() => {
+                        navigator.clipboard.writeText(file.data.fileURL);
+                        toast.success("Link Copied");
+                      }}
                     >
-                      <DownloadIcon /> Decrypt & Download
+                      <CopyIcon /> Copy Link
                     </MenuItem>
-                  ) : (
-                    <MenuItem
-                      as="a"
-                      href={file.data.fileURL}
-                      download
-                      target="_blank"
-                    >
-                      <DownloadIcon /> Download
+
+                    {(file.data.isEncrypted || file.data.crypto) && (
+                      <MenuItem onClick={() => openShareLinkModal(file)}>
+                        <ShareIcon /> Share Link
+                      </MenuItem>
+                    )}
+
+                    <div style={{ position: "relative" }}>
+                      <MenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowShareIcons(showShareIcons === file.id ? null : file.id);
+                        }}
+                      >
+                        <ShareIcon /> Social Share
+                      </MenuItem>
+
+                      {showShareIcons === file.id && (
+                        <SharePopover>
+                          <EmailShareButton url={file.data.fileURL}>
+                            <EmailIcon size={32} round />
+                          </EmailShareButton>
+                          <FacebookShareButton url={file.data.fileURL}>
+                            <FacebookIcon size={32} round />
+                          </FacebookShareButton>
+                          <LinkedinShareButton url={file.data.fileURL}>
+                            <LinkedinIcon size={32} round />
+                          </LinkedinShareButton>
+                          <WhatsappShareButton url={file.data.fileURL}>
+                            <WhatsappIcon size={32} round />
+                          </WhatsappShareButton>
+                        </SharePopover>
+                      )}
+                    </div>
+
+                    <MenuDivider />
+
+                    <MenuItem className="delete" onClick={() => handleDelete(file.id, file.data)}>
+                      <DeleteIcon /> Delete
                     </MenuItem>
-                  )}
 
-                  <MenuItem
-                    onClick={() => {
-                      navigator.clipboard.writeText(
-                        file.data.fileURL
-                      );
-                      toast.success("Link Copied");
-                    }}
-                  >
-                    <CopyIcon /> Copy Link
-                  </MenuItem>
+                    <MenuDivider />
 
-                  {/* Get Share Link for encrypted files - decrypts on server */}
-                  {file.data.isEncrypted && (
-                    <MenuItem onClick={() => openShareLinkModal(file)}>
-                      <ShareIcon /> Get Share Link 🔗
-                    </MenuItem>
-                  )}
-
-                  {/* Regular Share - social icons */}
-                  <MenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowShareIcons(
-                        showShareIcons === file.id ? null : file.id
-                      );
-                    }}
-                  >
-                    <ShareIcon /> Share via Social
-                  </MenuItem>
-
-                  {showShareIcons === file.id && (
-                    <SharePopover>
-                      <EmailShareButton url={file.data.fileURL}>
-                        <EmailIcon size={32} round />
-                      </EmailShareButton>
-                      <FacebookShareButton url={file.data.fileURL}>
-                        <FacebookIcon size={32} round />
-                      </FacebookShareButton>
-                      <LinkedinShareButton url={file.data.fileURL}>
-                        <LinkedinIcon size={32} round />
-                      </LinkedinShareButton>
-                      <WhatsappShareButton url={file.data.fileURL}>
-                        <WhatsappIcon size={32} round />
-                      </WhatsappShareButton>
-                    </SharePopover>
-                  )}
-
-                  <MenuItem
-                    className="delete"
-                    onClick={() =>
-                      handleDelete(file.id, file.data)
-                    }
-                  >
-                    <DeleteIcon /> Delete
-                  </MenuItem>
-
-                  <MenuDivider />
-
-                  <Meta>
-                    📅{" "}
-                    {convertDates(file.data.timestamp?.seconds)}
-                  </Meta>
-                  <Meta>📦 {changeBytes(file.data.size)}</Meta>
-                </OptionsMenu>
-              )}
-            </div>
-          </DataListRow>
-        ))
+                    <MetaInfo>
+                      <span>📅 {convertDates(file.data.timestamp?.seconds)}</span>
+                      <span>📦 {changeBytes(file.data.size)}</span>
+                    </MetaInfo>
+                  </OptionsMenu>
+                )}
+              </div>
+            </DataListRow>
+          ))}
+        </FileListContainer>
       ) : (
         <LottieImage
           imagePath={"/homePage.svg"}
@@ -332,221 +311,340 @@ const MainData = ({ files, handleOptionsClick, optionsVisible, handleDelete }) =
 
 export default MainData;
 
-/* ✅ STYLES  */
-const DataListRow = styled.div`
+/* ================= ANIMATIONS ================= */
+
+const fadeInUp = keyframes`
+  from { 
+    opacity: 0; 
+    transform: translateY(10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+`;
+
+const fadeInScale = keyframes`
+  from { 
+    opacity: 0; 
+    transform: scale(0.95) translateX(10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1) translateX(0); 
+  }
+`;
+
+const starPop = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+`;
+
+/* ================= STYLES ================= */
+
+const DataListHeader = styled.div`
   display: grid;
-  grid-template-columns: 1.5fr 0.8fr 1fr 0.5fr;
+  grid-template-columns: 2fr 0.8fr 1fr 0.5fr;
   width: 100%;
-  padding: 10px 16px;
+  padding: 12px 20px;
   align-items: center;
   border-bottom: 1px solid var(--border);
-  font-size: 14px;
+  background: var(--bg-secondary);
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 
-  div {
+  .name-col {
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
-  .starr {
-    margin-right: 6px;
-  }
-
-  a span {
-    display: inline-block;
-    max-width: 260px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
   @media screen and (max-width: 768px) {
     grid-template-columns: 2fr 1fr 0.8fr;
-    .modified { display: none; }
+    .date-col { display: none; }
   }
 
   @media screen and (max-width: 480px) {
     grid-template-columns: 2fr 0.8fr;
-    .fileSize, .modified { display: none; }
+    .size-col, .date-col { display: none; }
   }
 `;
 
-const OptionsTrigger = styled.span`
+const FileListContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const DataListRow = styled.div`
+  display: grid;
+  grid-template-columns: 2fr 0.8fr 1fr 0.5fr;
+  width: 100%;
+  padding: 14px 20px;
+  align-items: center;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 14px;
+  transition: all 0.2s ease;
+  animation: ${fadeInUp} 0.4s ease forwards;
+  opacity: 0;
+  position: relative;
+  z-index: 1;
+
+  &:hover {
+    background: var(--bg-tertiary);
+  }
+
+  /* When this row has an open dropdown, keep it on top */
+  &:has(.options-menu) {
+    z-index: 100;
+  }
+
+  .name-col {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .size-col, .date-col {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .actions-col {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  @media screen and (max-width: 768px) {
+    grid-template-columns: 2fr 1fr 0.8fr;
+    .date-col { display: none; }
+  }
+
+  @media screen and (max-width: 480px) {
+    grid-template-columns: 2fr 0.8fr;
+    .size-col, .date-col { display: none; }
+  }
+`;
+
+const StarButton = styled.button`
+  background: none;
+  border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
 
   svg {
-    font-size: 28px;
-    padding: 6px;
-    border-radius: 50%;
-    transition: background 0.15s ease;
+    font-size: 20px;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
   }
-  svg:hover {
-    background: rgba(255, 255, 255, 0.12);
+
+  &:hover svg {
+    color: #fbbf24;
+    animation: ${starPop} 0.3s ease;
+  }
+
+  svg[data-filled="true"] {
+    color: #fbbf24;
   }
 `;
 
-const OptionsMenu = styled.span`
+const FileInfo = styled.div`
   display: flex;
   align-items: center;
-  flex-direction: column;
-  position: absolute;
-  background-color: #fff;
-  border: 2px solid #ccc;
-  top: -200%;
-  right: 100%;
+  gap: 10px;
+  min-width: 0;
+
+  .filename {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 280px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+    font-weight: 500;
+  }
+`;
+
+const FileLink = styled.a`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--text);
+  transition: color 0.2s ease;
+
+  .filename {
+    max-width: 280px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+  }
+
+  &:hover {
+    color: var(--primary);
+  }
+`;
+
+const LockBadge = styled.span`
+  font-size: 14px;
+`;
+
+const OptionsTrigger = styled.button`
+  background: none;
+  border: none;
   cursor: pointer;
-  z-index: 10;
-  width: max-content;
-  min-width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
+  transition: all 0.2s ease;
 
-  /* 🌙 DARK MODE */
-  body.dark-mode & {
-    background-color: #2b2c2f;
-    border: 2px solid #3d3e42;
+  svg {
+    font-size: 20px;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
   }
 
-  &::before {
-    content: "";
-    position: absolute;
-    width: 15px;
-    height: 15px;
-    background-color: #fff;
-    top: 100px;
-    right: -8px;
-    transform: rotate(45deg);
-    border-right: 1px solid #ccc;
-    border-top: 1px solid #ccc;
-
-    /* 🌙 DARK MODE ARROW */
-    body.dark-mode & {
-      background-color: #2b2c2f;
-      border-right: 1px solid #3d3e42;
-      border-top: 1px solid #3d3e42;
+  &:hover {
+    background: var(--gradient-glow);
+    
+    svg {
+      color: var(--primary);
     }
   }
+`;
 
-  span {
-    width: 100%;
-    border-bottom: 2px solid #ccc;
-    padding: 10px;
-    display: flex;
-    align-items: center;
+const OptionsMenu = styled.div`
+  position: absolute;
+  top: -10px;
+  right: calc(60% + 4px);
+  min-width: 200px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  padding: 8px;
+  z-index: 1000;
+  animation: ${fadeInScale} 0.2s ease;
+`;
 
-    /* 🌙 DARK MODE BORDER */
-    body.dark-mode & {
-      border-bottom: 2px solid #3d3e42;
-    }
-
-    a {
-      color: #000;
-
-      /* 🌙 DARK MODE TEXT */
-      body.dark-mode & {
-        color: #e5e7eb;
-      }
-    }
-
-    &:last-child {
-      border-bottom: none;
-    }
-
-    &:hover {
-      background-color: #ccc;
-      z-index: 11;
-
-      /* 🌙 DARK MODE HOVER */
-      body.dark-mode & {
-        background-color: #3a3b3f;
-      }
-    }
-  }
-
-  button {
-    background-color: transparent;
-    border: none;
-    color: red;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    /* 🌙 DARK MODE RED */
-    body.dark-mode & {
-      color: #ff6b6b;
-    }
-  }
-
-  a {
-    color: #000;
-    background-color: transparent;
-
-    /* 🌙 DARK MODE TEXT */
-    body.dark-mode & {
-      color: #e5e7eb;
-    }
-  }
-
-  .fileSize,
-  .uploaded {
-    background-color: #f0f0f0;
-    cursor: default;
-
-    /* 🌙 DARK MODE META BACKGROUND */
-    body.dark-mode & {
-      background-color: #2b2c2f;
-      color: #cfcfcf;
-    }
-  }
+const MenuArrow = styled.div`
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--glass-bg);
+  border-right: 1px solid var(--glass-border);
+  border-top: 1px solid var(--glass-border);
+  transform: rotate(45deg);
+  top: 24px;
+  right: -7px;
 `;
 
 const MenuItem = styled.div`
-  padding: 12px 14px;
   display: flex;
   align-items: center;
-  width: 100%;
-  gap: 8px;
-  font-size: 15px;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
   cursor: pointer;
-  svg { font-size: 18px; }
-  &:hover { background: var(--menu-hover); }
-  &.delete { color: #e63946 !important; }
-`;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  transition: all 0.2s ease;
+  text-decoration: none;
 
-const Meta = styled.div`
-  padding: 10px 14px;
-  font-size: 13px;
-  opacity: 0.7;
-  pointer-events: none;
+  svg {
+    font-size: 18px;
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+  }
+
+  &:hover {
+    background: var(--gradient-glow);
+    transform: translateX(4px);
+
+    svg {
+      color: var(--primary);
+    }
+  }
+
+  &.delete {
+    color: var(--error);
+
+    svg {
+      color: var(--error);
+    }
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+  }
 `;
 
 const MenuDivider = styled.div`
-  width: 100%;
   height: 1px;
-  background: #ccc;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
   margin: 8px 0;
+`;
 
-  body.dark-mode & {
-    background: #555;
-  }
+const MetaInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  pointer-events: none;
 `;
 
 const SharePopover = styled.div`
   position: absolute;
-  top: 0;
-  right: 100%;
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
   padding: 8px;
-  background: var(--menu-bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  box-shadow: var(--shadow);
-  pointer-events: auto;
-  z-index: 9999;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  z-index: 20;
+  animation: none; /* Removed animation to avoid conflict with transform */
+
+  /* Little arrow pointing to the menu */
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -6px;
+    transform: translateY(-50%) rotate(45deg);
+    width: 12px;
+    height: 12px;
+    background: var(--glass-bg);
+    border-right: 1px solid var(--glass-border);
+    border-top: 1px solid var(--glass-border);
+  }
 `;

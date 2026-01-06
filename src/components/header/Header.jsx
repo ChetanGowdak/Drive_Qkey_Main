@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { auth, provider } from "../../firebase";
 import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import { useDispatch, useSelector } from "react-redux";
@@ -27,8 +27,10 @@ const Header = () => {
   const [isDark, setIsDark] = useState(() => localStorage.getItem("theme") === "dark");
 
   useEffect(() => {
+    document.body.classList.add("theme-transitioning");
     document.body.classList.toggle("dark-mode", isDark);
     localStorage.setItem("theme", isDark ? "dark" : "light");
+    setTimeout(() => document.body.classList.remove("theme-transitioning"), 300);
   }, [isDark]);
 
   const toggleTheme = () => setIsDark(!isDark);
@@ -78,8 +80,8 @@ const Header = () => {
           <LeftIcons isDark={isDark} toggleTheme={toggleTheme} />
 
           {/* ✅ Mobile-only theme toggle */}
-          <MobileThemeToggle onClick={toggleTheme}>
-            {isDark ? "☀️" : "🌙"}
+          <MobileThemeToggle onClick={toggleTheme} $isDark={isDark}>
+            <span className="icon">{isDark ? "☀️" : "🌙"}</span>
           </MobileThemeToggle>
 
           <ProfileSection
@@ -95,15 +97,19 @@ const Header = () => {
 
 export default Header;
 
+/* ✅ Animations */
+const glow = keyframes`
+  0%, 100% { box-shadow: 0 0 5px rgba(14, 165, 233, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); }
+`;
+
 /* ✅ Styles */
 const Container = styled.div.attrs(() => ({ className: "header-bar" }))`
   position: sticky;
   width: 100%;
   top: 0;
   z-index: 999;
-  background-color: var(--bg);
-  border-bottom: 1px solid var(--border);
-  padding: 6px 0;
+  padding: 8px 0;
 `;
 
 const Wrapper = styled.div`
@@ -111,6 +117,7 @@ const Wrapper = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 8px 20px;
+  gap: 16px;
 
   .searchCenter {
     flex: 1;
@@ -123,19 +130,38 @@ const Wrapper = styled.div`
 const RightContainer = styled.div`
   display: flex;
   align-items: center;
+  gap: 8px;
 `;
 
-/* ✅ Fix: Hide MobileThemeToggle on Desktop */
+/* ✅ Mobile Theme Toggle */
 const MobileThemeToggle = styled.div`
-  display: none; /* hidden by default */
+  display: none;
 
   @media (max-width: 768px) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    margin-right: 8px;
-    padding: 6px;
-    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    cursor: pointer;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+    
+    .icon {
+      font-size: 18px;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover {
+      background: var(--bg-tertiary);
+      border-color: var(--primary);
+      animation: ${glow} 2s ease-in-out infinite;
+      
+      .icon {
+        transform: rotate(${props => props.$isDark ? '180deg' : '-30deg'});
+      }
+    }
   }
 `;

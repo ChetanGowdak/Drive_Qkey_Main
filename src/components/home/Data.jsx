@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { db, auth } from "../../firebase";
 import { doc, deleteDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
@@ -12,6 +12,7 @@ import { encryptFile } from "../utils/crypto";
 import { uploadToCloudinary } from "../common/cloudinaryApi";
 import { v4 as uuidv4 } from "uuid";
 import PasswordModal from "../common/PasswordModal";
+import CustomDropdown from "../common/CustomDropdown";
 
 /* ✅ Data Page Component */
 const Data = () => {
@@ -26,8 +27,8 @@ const Data = () => {
   const [uploadError, setUploadError] = useState("");
 
   // 📊 Sort and Filter states
-  const [sortBy, setSortBy] = useState("date"); // date, name, size
-  const [filterType, setFilterType] = useState("all"); // all, images, documents, audio, video, other
+  const [sortBy, setSortBy] = useState("date");
+  const [filterType, setFilterType] = useState("all");
 
   /* ✅ Fetch files when user logged in */
   useEffect(() => {
@@ -41,7 +42,7 @@ const Data = () => {
     return () => unsubscribe();
   }, []);
 
-  /* ✅ Delete handler (move to trash first) */
+  /* ✅ Delete handler */
   const handleDelete = async (id, data) => {
     try {
       const confirmed = window.confirm("Are you sure you want to delete this file?");
@@ -58,12 +59,10 @@ const Data = () => {
     }
   };
 
-  /* ✅ Toggle options menu */
   const handleOptionsClick = (id) => {
     setOptionsVisible((prevVisible) => (prevVisible === id ? null : id));
   };
 
-  /* 📊 Get file type category */
   const getFileCategory = (file) => {
     const type = file.data.originalType || file.data.contentType || "";
     if (type.startsWith("image/")) return "images";
@@ -73,16 +72,21 @@ const Data = () => {
     return "other";
   };
 
-  /* 📊 Process files with sort and filter */
+  const handleRecentFileClick = (file) => {
+    if (file.data.crypto || file.data.isEncrypted) {
+      toast.info("🔐 Use the Download button in the file list to decrypt and download this file");
+    } else {
+      window.open(file.data.fileURL, '_blank');
+    }
+  };
+
   const processedFiles = useMemo(() => {
     let result = [...files];
 
-    // Filter
     if (filterType !== "all") {
       result = result.filter((file) => getFileCategory(file) === filterType);
     }
 
-    // Sort
     result.sort((a, b) => {
       switch (sortBy) {
         case "name":
@@ -130,7 +134,6 @@ const Data = () => {
     }
   }, []);
 
-  /* 🔐 Encrypt and upload dropped file */
   const handleEncryptAndUpload = async (password) => {
     if (!password || !droppedFile) {
       toast.warn("Upload cancelled");
@@ -146,17 +149,14 @@ const Data = () => {
       const user = auth.currentUser;
       if (!user) throw new Error("Not authenticated");
 
-      // 1️⃣ Encrypt
       const { encryptedBlob, meta } = await encryptFile(droppedFile, password);
       if (!encryptedBlob || encryptedBlob.size === 0) {
         throw new Error("Encrypted file is empty");
       }
 
-      // 2️⃣ Upload to Cloudinary
       const publicId = `files/${uuidv4()}_${meta.originalName}.enc`;
       const { url } = await uploadToCloudinary(encryptedBlob, publicId);
 
-      // 3️⃣ Save to Firestore
       await addDoc(collection(db, "myfiles"), {
         userId: user.uid,
         filename: meta.originalName,
@@ -164,6 +164,7 @@ const Data = () => {
         cloudinaryPublicId: publicId,
         size: meta.originalSize,
         originalType: meta.originalType,
+        isEncrypted: true,
         crypto: {
           salt_b64: meta.salt_b64,
           iv_b64: meta.iv_b64,
@@ -206,40 +207,51 @@ const Data = () => {
       )}
 
       {/* ✅ Recents Section */}
-      {files.length > 0 && <SectionTitle>Recents</SectionTitle>}
+      {files.length > 0 && <SectionTitle>📂 Recent Files</SectionTitle>}
       <RecentWrapper>
-        <RecentDataGrid files={files} />
+        <RecentDataGrid files={files} onFileClick={handleRecentFileClick} />
       </RecentWrapper>
 
       {/* 📊 Controls Bar - Sort & Filter */}
       {files.length > 0 && (
         <ControlsBar>
-          <FilterGroup>
-            <ControlLabel>Filter:</ControlLabel>
-            <ControlSelect value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-              <option value="all">All Files</option>
-              <option value="images">🖼️ Images</option>
-              <option value="documents">📄 Documents</option>
-              <option value="audio">🎵 Audio</option>
-              <option value="video">🎬 Video</option>
-              <option value="other">📦 Other</option>
-            </ControlSelect>
-          </FilterGroup>
-          <FilterGroup>
-            <ControlLabel>Sort:</ControlLabel>
-            <ControlSelect value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-              <option value="date">📅 Date</option>
-              <option value="name">🔤 Name</option>
-              <option value="size">📊 Size</option>
-            </ControlSelect>
-          </FilterGroup>
+          <ControlsLeft>
+            <CustomDropdown
+              label="Type"
+              icon="🏷️"
+              value={filterType}
+              onChange={setFilterType}
+              options={[
+                { value: "all", label: "All Files", icon: "📁" },
+                { value: "images", label: "Images", icon: "🖼️" },
+                { value: "documents", label: "Documents", icon: "📄" },
+                { value: "audio", label: "Audio", icon: "🎵" },
+                { value: "video", label: "Video", icon: "🎬" },
+                { value: "other", label: "Other", icon: "📦" },
+              ]}
+            />
+
+            <CustomDropdown
+              label="Sort"
+              icon="↕️"
+              value={sortBy}
+              onChange={setSortBy}
+              options={[
+                { value: "date", label: "Date", icon: "📅" },
+                { value: "name", label: "Name", icon: "🔤" },
+                { value: "size", label: "Size", icon: "📊" },
+              ]}
+            />
+          </ControlsLeft>
+
           <FileCountBadge>
-            {processedFiles.length} of {files.length} files
+            <span className="count">{processedFiles.length}</span>
+            <span className="label">of {files.length} files</span>
           </FileCountBadge>
         </ControlsBar>
       )}
 
-      {/* ✅ Main Data Section (Scrollable Area) */}
+      {/* ✅ Main Data Section */}
       <MainDataWrapper>
         <MainData
           files={processedFiles}
@@ -249,7 +261,7 @@ const Data = () => {
         />
       </MainDataWrapper>
 
-      {/* 🔐 Password Modal for Drag & Drop Upload */}
+      {/* 🔐 Password Modal */}
       {showPassword && droppedFile && (
         <PasswordModal
           title="Encrypt & Upload"
@@ -270,104 +282,95 @@ const Data = () => {
 
 export default Data;
 
-/* ✅ Layout Styles */
+/* ================= ANIMATIONS ================= */
+
+const pulse = keyframes`
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(0.98); }
+`;
+
+const bounce = keyframes`
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+`;
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+/* ================= STYLES ================= */
+
 const DataContainer = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 10px 0 0 20px;
+  padding: 16px 20px 0 20px;
   overflow: hidden;
   background: var(--bg);
+  position: relative;
 `;
 
 const SectionTitle = styled.h4`
   font-size: 14px;
-  margin-top: 30px;
-  margin-bottom: -20px;
-  color: var(--text-secondary);
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-top: 20px;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 
   @media screen and (max-width: 768px) {
     display: none;
   }
 `;
 
-/* ✅ Recents container: prevents overflow issues */
 const RecentWrapper = styled.div`
   flex-shrink: 0;
   width: 100%;
   overflow: hidden;
-  padding-top: 10px;
-  margin-bottom: 10px;
 `;
 
-/* 📊 Controls Bar */
+/* 📊 Premium Controls Bar */
 const ControlsBar = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
   gap: 16px;
-  padding: 12px 0;
   flex-wrap: wrap;
-
-  @media (max-width: 480px) {
-    gap: 10px;
-  }
+  border-bottom: 1px solid var(--border);
+  animation: ${fadeIn} 0.3s ease;
 `;
 
-const FilterGroup = styled.div`
+const ControlsLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+`;
+
+const FileCountBadge = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-`;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(139, 92, 246, 0.1));
+  border-radius: 20px;
+  border: 1px solid var(--border);
 
-const ControlLabel = styled.span`
-  font-size: 13px;
-  color: #6b7280;
-
-  body.dark-mode & {
-    color: #9ca3af;
+  .count {
+    font-size: 15px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
-  @media (max-width: 480px) {
-    display: none;
-  }
-`;
-
-const ControlSelect = styled.select`
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
-  background: #fff;
-  color: #374151;
-  font-size: 13px;
-  cursor: pointer;
-  outline: none;
-
-  &:focus {
-    border-color: #1a73e8;
-  }
-
-  body.dark-mode & {
-    background: #374151;
-    border-color: #4b5563;
-    color: #e5e7eb;
-
-    &:focus {
-      border-color: #8ab4f8;
-    }
-  }
-`;
-
-const FileCountBadge = styled.span`
-  margin-left: auto;
-  font-size: 12px;
-  color: #6b7280;
-  background: #f3f4f6;
-  padding: 4px 10px;
-  border-radius: 12px;
-
-  body.dark-mode & {
-    background: #374151;
-    color: #9ca3af;
+  .label {
+    font-size: 12px;
+    color: var(--text-muted);
   }
 `;
 
@@ -378,100 +381,59 @@ const MainDataWrapper = styled.div`
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
-  background: var(--bg);
-  padding-bottom: 40px;
+  margin-top: 8px;
+  padding-bottom: 20px;
   -webkit-overflow-scrolling: touch;
-  max-height: calc(100vh - 230px);
+  max-height: calc(100vh - 320px);
   border-top: 1px solid var(--border);
 
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: rgba(120, 120, 120, 0.3);
-    border-radius: 3px;
-  }
-
-  @media (max-width: 1024px) {
-    max-height: calc(100vh - 210px);
-  }
-
   @media (max-width: 768px) {
-    max-height: calc(100vh - 190px);
-  }
-
-  @media (max-width: 480px) {
-    max-height: calc(100vh - 160px);
+    max-height: calc(100vh - 280px);
   }
 `;
 
-/* 🎯 Drop Zone Overlay Styles */
+/* 🎯 Drop Zone Overlay */
 const DropZoneOverlay = styled.div`
   position: absolute;
-  inset: 0;
-  background: rgba(26, 115, 232, 0.15);
-  backdrop-filter: blur(4px);
+  inset: 10px;
+  background: rgba(14, 165, 233, 0.1);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  pointer-events: none;
-  border: 3px dashed #1a73e8;
-  border-radius: 12px;
-  margin: 10px;
-  animation: pulse 1.5s ease-in-out infinite;
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-  }
-
-  body.dark-mode & {
-    background: rgba(138, 180, 248, 0.15);
-    border-color: #8ab4f8;
-  }
+  border: 3px dashed var(--primary);
+  border-radius: 20px;
+  animation: ${pulse} 2s ease-in-out infinite;
 `;
 
 const DropZoneContent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 32px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-
-  body.dark-mode & {
-    background: #2d2d2d;
-  }
+  gap: 12px;
+  padding: 40px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-lg);
 `;
 
 const DropIcon = styled.div`
-  font-size: 48px;
-  animation: bounce 0.6s ease-in-out infinite alternate;
-
-  @keyframes bounce {
-    from { transform: translateY(0); }
-    to { transform: translateY(-8px); }
-  }
+  font-size: 56px;
+  animation: ${bounce} 1s ease-in-out infinite;
 `;
 
 const DropText = styled.div`
   font-size: 20px;
-  font-weight: 600;
-  color: #1a73e8;
-
-  body.dark-mode & {
-    color: #8ab4f8;
-  }
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 `;
 
 const DropSubtext = styled.div`
   font-size: 14px;
-  color: #5f6368;
-
-  body.dark-mode & {
-    color: #9aa0a6;
-  }
+  color: var(--text-muted);
 `;

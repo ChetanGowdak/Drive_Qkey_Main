@@ -49,9 +49,13 @@ const Starred = () => {
   );
 };
 
+export default Starred;
+
 const StarredContainer = styled.div`
   flex: 1;
-  padding: 10px 10px 0px 20px;
+  padding: 16px 20px 0 20px;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 `;
-
-export default Starred;

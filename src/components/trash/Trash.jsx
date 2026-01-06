@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import PageHeader from "../common/PageHeader";
 import { auth } from "../../firebase";
 import {
@@ -13,6 +13,7 @@ import { changeBytes, convertDates } from "../common/common";
 import { DeleteIcon } from "../common/SvgIcons";
 import LoaderContainer from "../loaders/LoaderContainer";
 import { toast } from "react-toastify";
+import LottieImage from "../common/LottieImage";
 
 const Trash = () => {
   const [files, setFiles] = useState([]);
@@ -33,7 +34,6 @@ const Trash = () => {
     return () => unsub && unsub();
   }, []);
 
-  // 🗑️ Empty all trash
   const handleEmptyTrash = async () => {
     if (files.length === 0) return;
 
@@ -61,14 +61,13 @@ const Trash = () => {
     <TrashContainer>
       <PageHeader pageTitle={"Trash"} />
 
-      {/* 🗑️ Trash Header with Empty Trash button */}
       {!loading && files.length > 0 && (
         <TrashHeader>
-          <FileCount>{files.length} file{files.length > 1 ? 's' : ''} in trash</FileCount>
-          <EmptyTrashBtn
-            onClick={handleEmptyTrash}
-            disabled={emptying}
-          >
+          <FileCountBadge>
+            <span className="count">{files.length}</span>
+            <span className="label">file{files.length > 1 ? 's' : ''} in trash</span>
+          </FileCountBadge>
+          <EmptyTrashBtn onClick={handleEmptyTrash} disabled={emptying}>
             {emptying ? "Emptying..." : "🗑️ Empty Trash"}
           </EmptyTrashBtn>
         </TrashHeader>
@@ -78,13 +77,16 @@ const Trash = () => {
         <LoaderContainer />
       ) : files.length === 0 ? (
         <EmptyState>
-          <img src="/trash.svg" alt="Empty Trash" />
-          <p>No files in Trash</p>
+          <LottieImage
+            imagePath={"/trash.svg"}
+            text1={"No files in Trash"}
+            text2={"Items you delete will appear here"}
+          />
         </EmptyState>
       ) : (
         <Grid>
-          {files.map((file) => (
-            <Card key={file.id}>
+          {files.map((file, index) => (
+            <Card key={file.id} style={{ animationDelay: `${index * 0.05}s` }}>
               <IconWrap>
                 <FileIcons
                   type={
@@ -98,12 +100,9 @@ const Trash = () => {
               <Info>
                 <Title title={file.data.filename}>🗑 {file.data.filename}</Title>
                 <Meta>
-                  <span>
-                    {changeBytes(file.data.originalSize || file.data.size)}
-                  </span>
+                  <span>{changeBytes(file.data.originalSize || file.data.size)}</span>
                   <span>•</span>
                   <span>
-                    Deleted:{" "}
                     {convertDates(
                       file.data.deletedAt?.seconds ||
                       file.data.timestamp?.seconds
@@ -118,7 +117,7 @@ const Trash = () => {
                   <DeleteBtn
                     onClick={() => handleDeleteFromTrash(file.id, file.data)}
                   >
-                    <DeleteIcon /> Delete forever
+                    <DeleteIcon /> Delete
                   </DeleteBtn>
                 </Actions>
               </Info>
@@ -132,329 +131,190 @@ const Trash = () => {
 
 export default Trash;
 
-/* ----------------------------- 🧩 Styles ----------------------------- */
+/* ================= ANIMATIONS ================= */
+
+const fadeInUp = keyframes`
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+/* ================= STYLES ================= */
+
 const TrashContainer = styled.div`
   flex: 1;
-  padding: 10px 10px 0 20px;
-
-  @media (max-width: 768px) {
-    padding: 10px;
-  }
+  padding: 16px 20px 0 20px;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
 `;
 
 const TrashHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
-  margin-bottom: 8px;
-  border-bottom: 1px solid #e5e7eb;
-
-  body.dark-mode & {
-    border-bottom-color: #374151;
-  }
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
 `;
 
-const FileCount = styled.span`
-  font-size: 14px;
-  color: #6b7280;
+const FileCountBadge = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+  border-radius: 20px;
+  border: 1px solid var(--border);
 
-  body.dark-mode & {
-    color: #9ca3af;
+  .count {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--error);
+  }
+
+  .label {
+    font-size: 12px;
+    color: var(--text-muted);
   }
 `;
 
 const EmptyTrashBtn = styled.button`
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: 1px solid #fecaca;
-  background: #fef2f2;
-  color: #991b1b;
-  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  font-weight: 600;
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
 
   &:hover:not(:disabled) {
-    background: #fee2e2;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-
-  body.dark-mode & {
-    color: #f87171;
-    border-color: #7f1d1d;
-    background: #2b1818;
-  }
-  body.dark-mode &:hover:not(:disabled) {
-    background: #3f1f1f;
-  }
 `;
 
 const Grid = styled.div`
-  width: 100%;
   display: grid;
   gap: 14px;
-  padding: 10px 0;
-  grid-template-columns: repeat(4, minmax(220px, 1fr));
-
-  @media (max-width: 1100px) {
-    grid-template-columns: repeat(3, minmax(200px, 1fr));
-  }
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(2, minmax(180px, 1fr));
-  }
-  @media (max-width: 420px) {
-    grid-template-columns: 1fr;
-  }
+  margin-top: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 `;
 
 const Card = styled.div`
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: flex-start;
-  background: #fff;
-  transition: background 0.25s ease, border-color 0.25s ease;
+  background: var(--bg-secondary);
+  transition: all 0.3s ease;
+  animation: ${fadeInUp} 0.4s ease forwards;
+  opacity: 0;
 
-  /* 🌙 Dark Mode */
-  body.dark-mode & {
-    background: #1f1f1f;
-    border-color: #2e2e2e;
-  }
-  body.dark-mode &:hover {
-    background: #2a2a2a;
-    border-color: #3a3a3a;
-  }
-
-  /* 📱 Stack layout for narrow screens */
-  @media (max-width: 600px) {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+  &:hover {
+    border-color: var(--error);
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.1);
+    transform: translateY(-2px);
   }
 `;
 
 const IconWrap = styled.div`
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+  flex-shrink: 0;
 
   svg {
-    font-size: 32px;
-    color: #6b7280;
-  }
-
-  /* 🌙 Dark Mode */
-  body.dark-mode & svg {
-    color: #d1d5db;
-  }
-
-  @media (max-width: 600px) {
-    svg {
-      font-size: 36px;
-    }
+    font-size: 24px;
+    color: var(--text-muted);
   }
 `;
 
 const Info = styled.div`
-  display: grid;
-  gap: 8px;
   flex: 1;
   min-width: 0;
-
-  @media (max-width: 600px) {
-    align-items: center;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 `;
 
 const Title = styled.div`
   font-weight: 600;
-  color: #111827;
-  max-width: 22ch;
+  font-size: 14px;
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  word-break: break-all;
-
-  body.dark-mode & {
-    color: #e5e7eb;
-  }
-
-  @media (max-width: 480px) {
-    font-size: 14px;
-    max-width: 100%;
-    white-space: normal;
-  }
 `;
 
 const Meta = styled.div`
   display: flex;
   gap: 6px;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--text-muted);
   flex-wrap: wrap;
-  justify-content: flex-start;
-
-  body.dark-mode & {
-    color: #9ca3af;
-  }
-
-  @media (max-width: 480px) {
-    justify-content: center;
-    text-align: center;
-  }
 `;
 
 const Actions = styled.div`
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-
-  @media (max-width: 480px) {
-    justify-content: center;
-    gap: 8px;
-  }
+  gap: 8px;
+  margin-top: 4px;
 `;
 
-const BtnBase = styled.button`
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-  background: #f9fafb;
-  cursor: pointer;
+const RestoreBtn = styled.button`
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
   font-weight: 600;
-  font-size: 14px;
-  transition: 0.2s ease;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 
   &:hover {
-    background: #f3f4f6;
-  }
-
-  /* 🌙 Dark Mode */
-  body.dark-mode & {
-    border-color: #3a3a3a;
-    background: #2a2a2a;
-    color: #e5e7eb;
-  }
-
-  body.dark-mode &:hover {
-    background: #333;
-  }
-
-  @media (max-width: 480px) {
-    width: 100%;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
   }
 `;
 
-const RestoreBtn = styled(BtnBase)`
-  color: #065f46;
-  border-color: #a7f3d0;
-  background: #ecfdf5;
-
-  &:hover {
-    background: #d1fae5;
-  }
-
-  body.dark-mode & {
-    color: #34d399;
-    border-color: #065f46;
-    background: #1b2b23;
-  }
-  body.dark-mode &:hover {
-    background: #1e3a31;
-  }
-`;
-
-const DeleteBtn = styled(BtnBase)`
-  color: #991b1b;
-  border-color: #fecaca;
-  background: #fef2f2;
-  display: inline-flex;
+const DeleteBtn = styled.button`
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--error);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
+  gap: 4px;
+
+  svg {
+    font-size: 14px;
+  }
 
   &:hover {
-    background: #fee2e2;
-  }
-
-  body.dark-mode & {
-    color: #f87171;
-    border-color: #7f1d1d;
-    background: #2b1818;
-  }
-  body.dark-mode &:hover {
-    background: #3f1f1f;
+    background: rgba(239, 68, 68, 0.1);
+    border-color: var(--error);
   }
 `;
 
 const EmptyState = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  animation: fadeInScale 0.6s ease-out;
-
-  img {
-    width: 300px;
-    opacity: 0.95;
-    pointer-events: none;
-    user-select: none;
-  }
-
-  p {
-    margin-top: 8px;
-    font-size: 15px;
-    font-weight: 500;
-    color: #6b7280;
-    opacity: 0;
-    animation: textFade 0.4s ease-out forwards;
-    animation-delay: 0.3s;
-  }
-
-  body.dark-mode & p {
-    color: #9ca3af;
-  }
-
-  @keyframes fadeInScale {
-    from {
-      opacity: 0;
-      transform: scale(0.5);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  @keyframes textFade {
-    from {
-      opacity: 0;
-      transform: translateY(5px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @media (max-width: 480px) {
-    img {
-      width: 220px;
-    }
-
-    p {
-      font-size: 14px;
-    }
-  }
+  width: 100%;
+  padding: 20px;
 `;
