@@ -7,7 +7,7 @@ import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import FileIcons from "../common/FileIcons";
 
-const SearchBar = () => {
+const SearchBar = ({ onFocusChange }) => {
   const [inputQuery, setInputQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
@@ -106,6 +106,7 @@ const SearchBar = () => {
       if (!suggestionsRef.current?.contains(document.activeElement)) {
         setIsFocused(false);
         setSuggestions([]);
+        onFocusChange?.(false);
       }
     }, 150);
   };
@@ -123,7 +124,10 @@ const SearchBar = () => {
           value={inputQuery}
           onChange={(e) => setInputQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          onFocus={() => setIsFocused(true)}
+          onFocus={() => {
+            setIsFocused(true);
+            onFocusChange?.(true);
+          }}
           onBlur={handleBlur}
         />
         {inputQuery && (
@@ -298,6 +302,17 @@ const SuggestionsDropdown = styled.div`
   overflow: hidden;
   z-index: 1000;
   animation: ${fadeIn} 0.2s ease;
+  max-height: 300px;
+  overflow-y: auto;
+
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 70px;
+    left: 10px;
+    right: 10px;
+    max-height: 60vh;
+    border-radius: 12px;
+  }
 `;
 
 const SuggestionsHeader = styled.div`
@@ -331,6 +346,15 @@ const SuggestionItem = styled.div`
     color: var(--text-muted);
     flex-shrink: 0;
   }
+
+  @media (max-width: 768px) {
+    padding: 14px 16px;
+    gap: 14px;
+
+    svg {
+      font-size: 24px;
+    }
+  }
 `;
 
 const SuggestionText = styled.div`
@@ -338,6 +362,7 @@ const SuggestionText = styled.div`
   align-items: center;
   gap: 8px;
   min-width: 0;
+  flex: 1;
 
   .filename {
     font-size: 14px;
@@ -351,6 +376,12 @@ const SuggestionText = styled.div`
   .badge {
     font-size: 12px;
     flex-shrink: 0;
+  }
+
+  @media (max-width: 768px) {
+    .filename {
+      font-size: 15px;
+    }
   }
 `;
 
@@ -370,6 +401,10 @@ const SuggestionFooter = styled.div`
     font-family: inherit;
     font-size: 10px;
     margin: 0 2px;
+  }
+
+  @media (max-width: 768px) {
+    display: none;
   }
 `;
 

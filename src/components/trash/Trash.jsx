@@ -146,6 +146,8 @@ const TrashContainer = styled.div`
   background: var(--bg);
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
 `;
 
 const TrashHeader = styled.div`
@@ -255,8 +257,11 @@ const Title = styled.div`
   font-size: 14px;
   color: var(--text);
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+  line-height: 1.3;
 `;
 
 const Meta = styled.div`

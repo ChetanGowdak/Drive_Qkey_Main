@@ -302,7 +302,7 @@ const InputGlow = styled.div`
 
 const PasswordInput = styled.input`
   width: 100%;
-  padding: 16px 52px 16px 18px;
+  padding: 16px 56px 16px 18px;
   border-radius: 12px;
   border: 2px solid ${props => props.$error ? 'var(--error)' : 'var(--border)'};
   background: var(--bg-secondary);
@@ -326,24 +326,39 @@ const PasswordInput = styled.input`
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+  @media (max-width: 480px) {
+    padding: 14px 50px 14px 14px;
+    font-size: 14px;
+  }
 `;
 
 const ToggleButton = styled.button`
   position: absolute;
-  right: 14px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  background: none;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
   cursor: pointer;
-  font-size: 20px;
-  padding: 4px;
-  opacity: 0.7;
+  font-size: 18px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  opacity: 0.8;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     opacity: 1;
-    transform: translateY(-50%) scale(1.1);
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  @media (max-width: 480px) {
+    right: 8px;
+    font-size: 16px;
+    padding: 5px 6px;
   }
 `;
 

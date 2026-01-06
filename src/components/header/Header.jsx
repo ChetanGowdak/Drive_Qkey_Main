@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import styled, { keyframes } from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 import { auth, provider } from "../../firebase";
 import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
 import { useDispatch, useSelector } from "react-redux";
@@ -25,6 +25,9 @@ const Header = () => {
 
   // ✅ Dark Mode toggle + persistence
   const [isDark, setIsDark] = useState(() => localStorage.getItem("theme") === "dark");
+
+  // ✅ Search focus state for mobile expansion
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   useEffect(() => {
     document.body.classList.add("theme-transitioning");
@@ -62,7 +65,7 @@ const Header = () => {
 
   return (
     <Container>
-      <Wrapper>
+      <Wrapper $searchFocused={isSearchFocused}>
         <LogoWrapperComponent
           onClick={() => dispatch(setSidebarBool(!sidebarBool))}
           userName={userName}
@@ -71,11 +74,11 @@ const Header = () => {
         {/* ✅ Search visible ONLY once, across all breakpoints */}
         {userName && (
           <div className="searchCenter">
-            <SearchBar />
+            <SearchBar onFocusChange={setIsSearchFocused} />
           </div>
         )}
 
-        <RightContainer>
+        <RightContainer $searchFocused={isSearchFocused}>
           {/* ✅ Desktop toggle only (in LeftIcons) */}
           <LeftIcons isDark={isDark} toggleTheme={toggleTheme} />
 
@@ -124,6 +127,30 @@ const Wrapper = styled.div`
     display: flex;
     justify-content: center;
     max-width: 650px;
+    transition: all 0.3s ease;
+  }
+
+  @media (max-width: 768px) {
+    gap: ${props => props.$searchFocused ? '8px' : '16px'};
+    
+    /* Hide logo when search is focused on mobile */
+    > div:first-child {
+      ${props => props.$searchFocused && css`
+        width: 0;
+        min-width: 0;
+        opacity: 0;
+        overflow: hidden;
+        padding: 0;
+        margin: 0;
+        pointer-events: none;
+      `}
+      transition: all 0.3s ease;
+    }
+
+    .searchCenter {
+      flex: ${props => props.$searchFocused ? '1' : 'unset'};
+      max-width: ${props => props.$searchFocused ? '100%' : '280px'};
+    }
   }
 `;
 
@@ -131,6 +158,22 @@ const RightContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+  transition: all 0.3s ease;
+
+  @media (max-width: 768px) {
+    ${props => props.$searchFocused && css`
+      gap: 4px;
+      
+      /* Hide theme toggle when search is focused */
+      > div:nth-child(2) {
+        width: 0;
+        opacity: 0;
+        overflow: hidden;
+        padding: 0;
+        margin: 0;
+      }
+    `}
+  }
 `;
 
 /* ✅ Mobile Theme Toggle */
@@ -148,6 +191,7 @@ const MobileThemeToggle = styled.div`
     background: var(--bg-secondary);
     border: 1px solid var(--border);
     transition: all 0.3s ease;
+    flex-shrink: 0;
     
     .icon {
       font-size: 18px;

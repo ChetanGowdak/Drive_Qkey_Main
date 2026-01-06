@@ -218,8 +218,11 @@ const Title = styled.div`
   font-size: 14px;
   color: var(--text);
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+  line-height: 1.3;
 `;
 
 const Meta = styled.div`

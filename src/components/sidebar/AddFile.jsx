@@ -38,6 +38,12 @@ const glow = keyframes`
 
 const SidebarBtn = styled.div`
   padding: 12px 16px;
+
+  @media screen and (max-width: 768px) {
+    padding: 12px 10px;
+    display: flex;
+    justify-content: center;
+  }
 `;
 
 const GradientButton = styled.button`

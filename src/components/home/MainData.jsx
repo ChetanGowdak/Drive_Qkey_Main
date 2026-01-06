@@ -616,35 +616,20 @@ const MetaInfo = styled.div`
 `;
 
 const SharePopover = styled.div`
-  position: absolute;
-  right: calc(100% + 10px);
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  box-shadow: var(--shadow-lg);
-  z-index: 20;
-  animation: none; /* Removed animation to avoid conflict with transform */
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+  margin-top: 8px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
 
-  /* Little arrow pointing to the menu */
-  &::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    right: -6px;
-    transform: translateY(-50%) rotate(45deg);
-    width: 12px;
-    height: 12px;
-    background: var(--glass-bg);
-    border-right: 1px solid var(--glass-border);
-    border-top: 1px solid var(--glass-border);
+  button {
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.1);
+    }
   }
 `;
